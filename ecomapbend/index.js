@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("./db");
 const app = express();
+const authenticateToken = require("./middleware/auth");
 
 app.use(cors());
 app.use(express.json());
@@ -154,12 +155,109 @@ app.post("/auth/login", async (req, res) => {
       return res.status(401).json({ error: "Contraseña incorrecta" });
     }
 
-    // Generar token JWT
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
+    // Generar token con expiración de 1 hora
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
-    res.json({ message: "Login exitoso", token, user: { id: user.id, nombre: user.nombre, email: user.email } });
+    res.json({
+      message: "Login exitoso",
+      token,
+      usuario: {
+        id: user.id,
+        nombre: user.nombre,
+        email: user.email
+      }
+    });
   } catch (err) {
     console.error("Error en login:", err.message);
     res.status(500).json({ error: "Error en login" });
+  }
+});
+
+
+// Ruta protegida: solo accesible con token válido
+app.get("/perfil", authenticateToken, (req, res) => {
+  res.json({
+    mensaje: "Bienvenido a tu perfil privado",
+    usuario: req.user
+  });
+});
+
+// ==================
+// RUTAS PUNTOS DE RECICLAJE
+// ==================
+
+// Crear un punto (protegida)
+app.post("/puntos", authenticateToken, async (req, res) => {
+  try {
+    const { nombre, tipo_residuo, direccion, lat, lon } = req.body;
+
+    if (!nombre || !tipo_residuo) {
+      return res.status(400).json({ error: "Nombre y tipo de residuo son obligatorios" });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO puntos_reciclaje (usuario_id, nombre, tipo_residuo, direccion, lat, lon)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [req.user.id, nombre, tipo_residuo, direccion, lat, lon]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error("Error creando punto:", err.message);
+    res.status(500).json({ error: "Error creando punto" });
+  }
+});
+
+// Obtener todos los puntos
+app.get("/puntos", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM puntos_reciclaje ORDER BY creado_en DESC");
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Error obteniendo puntos" });
+  }
+});
+
+// Obtener un punto por ID
+app.get("/puntos/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query("SELECT * FROM puntos_reciclaje WHERE id = $1", [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Punto no encontrado" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: "Error obteniendo punto" });
+  }
+});
+
+// Eliminar un punto (solo el usuario dueño)
+app.delete("/puntos/:id", authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validar que el punto sea del usuario
+    const check = await pool.query("SELECT * FROM puntos_reciclaje WHERE id = $1", [id]);
+
+    if (check.rows.length === 0) {
+      return res.status(404).json({ error: "Punto no encontrado" });
+    }
+
+    if (check.rows[0].usuario_id !== req.user.id) {
+      return res.status(403).json({ error: "No tienes permiso para borrar este punto" });
+    }
+
+    await pool.query("DELETE FROM puntos_reciclaje WHERE id = $1", [id]);
+
+    res.json({ message: "Punto eliminado con éxito" });
+  } catch (err) {
+    res.status(500).json({ error: "Error eliminando punto" });
   }
 });
