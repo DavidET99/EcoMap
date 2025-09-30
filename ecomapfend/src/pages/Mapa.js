@@ -8,15 +8,30 @@ const icon = new L.Icon({
   iconSize: [32, 32]
 });
 
+// Función para obtener dirección con Nominatim
+async function getDireccion(lat, lon) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+    );
+    const data = await res.json();
+    return data.display_name || "Dirección desconocida";
+  } catch (err) {
+    console.error("Error obteniendo dirección:", err);
+    return "Dirección desconocida";
+  }
+}
+
 // Componente para agregar punto en el click
 function AddPoint({ onAdd }) {
   useMapEvents({
-    click(e) {
+    async click(e) {
       const { lat, lng } = e.latlng;
       const nombre = prompt("Nombre del punto:");
       const tipo = prompt("Tipo de residuo:");
       if (nombre && tipo) {
-        onAdd({ nombre, tipo_residuo: tipo, lat, lon: lng });
+        const direccion = await getDireccion(lat, lng);
+        onAdd({ nombre, tipo_residuo: tipo, direccion, lat, lon: lng });
       }
     }
   });
@@ -25,6 +40,8 @@ function AddPoint({ onAdd }) {
 
 function Mapa() {
   const [puntos, setPuntos] = useState([]);
+  
+
 
   // cargar puntos
   useEffect(() => {
@@ -63,8 +80,12 @@ function Mapa() {
   };
 
   return (
-    <div style={{ height: "100vh", width: "100%" }}>
-      <MapContainer center={[-33.45, -70.66]} zoom={12} style={{ height: "100%", width: "100%" }}>
+    <div style={{ height: "500px", width: "100%", borderRadius: "12px", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.1)" }}>
+      <MapContainer
+        center={[-33.45, -70.66]}
+        zoom={12}
+        style={{ height: "100%", width: "100%" }}
+      >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <AddPoint onAdd={handleAdd} />
         {puntos.map((p) => (
@@ -72,12 +93,14 @@ function Mapa() {
             <Popup>
               <b>{p.nombre}</b> <br />
               Tipo: {p.tipo_residuo} <br />
-              Creado por: {p.creador_nombre}
+              Dirección: {p.direccion || "No especificada"} <br />
+              Creado por: {p.creador_nombre || "Usuario"}
             </Popup>
           </Marker>
         ))}
       </MapContainer>
     </div>
+
   );
 }
 

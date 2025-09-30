@@ -229,6 +229,19 @@ app.get("/usuarios/:id/puntos", async (req, res) => {
   }
 });
 
+// Obtener puntos del usuario autenticado
+app.get("/mis-puntos", authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM puntos_reciclaje WHERE usuario_id = $1 ORDER BY creado_en DESC",
+      [req.user.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Error obteniendo tus puntos" });
+  }
+});
+
 /* ---------------------------
    INICIO SERVIDOR
    --------------------------- */
