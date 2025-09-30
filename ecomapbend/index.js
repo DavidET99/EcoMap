@@ -136,34 +136,38 @@ app.get("/puntos/:id", async (req, res) => {
   }
 });
 
-// Crear un punto (protegida)
+// Crear un punto (protegida) ✅ corregido
 app.post("/puntos", authenticateToken, async (req, res) => {
   try {
-    const usuarioId = parseInt(req.user.id, 10);
     const { nombre, tipo_residuo, direccion, lat, lon } = req.body;
 
     if (!nombre || !tipo_residuo) {
-      return res.status(400).json({ error: "Nombre y tipo_residuo son obligatorios" });
+      return res.status(400).json({ error: "Nombre y tipo de residuo son obligatorios" });
     }
 
-    const latNum = lat !== undefined ? parseFloat(lat) : null;
-    const lonNum = lon !== undefined ? parseFloat(lon) : null;
+    // Insertar punto
+    const insert = await pool.query(
+      `INSERT INTO puntos_reciclaje (usuario_id, nombre, tipo_residuo, direccion, lat, lon)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id`,
+      [req.user.id, nombre, tipo_residuo, direccion, lat, lon]
+    );
 
-    const insertQ = `
-      INSERT INTO puntos_reciclaje (usuario_id, nombre, tipo_residuo, direccion, lat, lon)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING id, usuario_id, nombre, tipo_residuo, direccion, lat, lon, creado_en
-    `;
-    const insertRes = await pool.query(insertQ, [usuarioId, nombre, tipo_residuo, direccion, latNum, lonNum]);
-    const nuevo = insertRes.rows[0];
+    const nuevoId = insert.rows[0].id;
 
-    // Traer datos del creador para devolver junto al punto
-    const userRes = await pool.query("SELECT id, nombre AS creador_nombre, email AS creador_email FROM usuarios WHERE id = $1", [usuarioId]);
-    const creador = userRes.rows[0] || null;
+    // Devolver punto con JOIN
+    const result = await pool.query(
+      `SELECT p.id, p.usuario_id, p.nombre, p.tipo_residuo, p.direccion, p.lat, p.lon, p.creado_en,
+              u.nombre AS creador_nombre, u.email AS creador_email
+       FROM puntos_reciclaje p
+       JOIN usuarios u ON p.usuario_id = u.id
+       WHERE p.id = $1`,
+      [nuevoId]
+    );
 
-    res.status(201).json({ ...nuevo, creador });
+    res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error("Error creando /puntos:", err);
+    console.error("Error creando punto:", err.message);
     res.status(500).json({ error: "Error creando punto" });
   }
 });
