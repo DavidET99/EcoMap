@@ -1,67 +1,27 @@
-import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "react-leaflet";
+import React, { useEffect, useState, useRef } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import Modal from "react-modal";
 
-Modal.setAppElement("#root"); // evita warnings de accesibilidad
+Modal.setAppElement("#root");
 
-// 🔹 Iconos personalizados
-const icon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/3299/3299935.png",
+// 🧭 Iconos personalizados
+const iconDefault = new L.Icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
   iconSize: [32, 32],
 });
 
-const duocIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/5193/5193797.png", // ícono de escuela
+const iconDuoc = new L.Icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/167/167707.png", // ícono tipo "escuela"
   iconSize: [36, 36],
 });
 
-const userIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/149/149071.png", // ícono de ubicación actual
+const iconUserLocation = new L.Icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/447/447031.png", // punto azul estilo gps
   iconSize: [28, 28],
 });
 
-// Captura el click en el mapa para crear puntos
-function AddPoint({ onMapClick }) {
-  useMapEvents({
-    click(e) {
-      const { lat, lng } = e.latlng;
-      onMapClick({ lat, lon: lng });
-    },
-  });
-  return null;
-}
-
-// Mostrar ubicación actual (centrar solo una vez)
-function LocationMarker({ onLocationFound }) {
-  const [position, setPosition] = useState(null);
-  const map = useMap();
-
-  useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        const newPos = [latitude, longitude];
-        setPosition(newPos);
-        onLocationFound(newPos);
-        map.setView(newPos, 14); // ✅ centra solo una vez
-      },
-      (err) => {
-        console.error("Error obteniendo ubicación:", err);
-        alert("No se pudo obtener la ubicación actual");
-      },
-      { enableHighAccuracy: true, timeout: 15000 }
-    );
-  }, [map, onLocationFound]);
-
-  return position ? (
-    <Marker position={position} icon={userIcon}>
-      <Popup>📍 Tu ubicación actual</Popup>
-    </Marker>
-  ) : null;
-}
-
-// Render de estrellas
+// ⭐ Componente estrellas visual
 const StarRating = ({ value }) => {
   const v = Number(value) || 0;
   const full = Math.floor(v);
@@ -76,6 +36,52 @@ const StarRating = ({ value }) => {
   );
 };
 
+// 🎯 Captura clicks en el mapa
+function AddPoint({ onMapClick }) {
+  useMapEvents({
+    click(e) {
+      const { lat, lng } = e.latlng;
+      onMapClick({ lat, lon: lng });
+    },
+  });
+  return null;
+}
+
+// 📍 Botón para volver a la ubicación del usuario
+function LocateButton({ userPosition }) {
+  const map = useMap();
+
+  const handleClick = () => {
+    if (userPosition) {
+      map.flyTo(userPosition, 15, { duration: 1.2 });
+    } else {
+      alert("Ubicación no disponible todavía");
+    }
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      style={{
+        position: "absolute",
+        bottom: 20,
+        right: 20,
+        zIndex: 3000,
+        backgroundColor: "white",
+        border: "1px solid #ccc",
+        borderRadius: "50%",
+        width: 44,
+        height: 44,
+        cursor: "pointer",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+      }}
+      title="Ir a mi ubicación"
+    >
+      📍
+    </button>
+  );
+}
+
 function Mapa() {
   const [puntos, setPuntos] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -85,34 +91,42 @@ function Mapa() {
   const [nuevoComentario, setNuevoComentario] = useState("");
   const [calificacion, setCalificacion] = useState(5);
   const [promedioGeneral, setPromedioGeneral] = useState(0);
+  const [userPosition, setUserPosition] = useState(null);
+  const mapRef = useRef(null);
 
+  // 🧮 Calcular promedio general
   const calcularPromedioGeneral = (data) => {
-    if (!data || data.length === 0) {
-      setPromedioGeneral(0);
-      return;
-    }
+    if (!data || data.length === 0) return setPromedioGeneral(0);
     const conCalificaciones = data.filter((p) => Number(p.comentarios_count) > 0);
-    if (conCalificaciones.length === 0) {
-      setPromedioGeneral(0);
-      return;
-    }
-    const total = conCalificaciones.reduce(
-      (sum, p) => sum + (Number(p.avg_calificacion) || 0),
-      0
-    );
-    const avg = total / conCalificaciones.length;
-    setPromedioGeneral(Number(avg.toFixed(1)));
+    if (conCalificaciones.length === 0) return setPromedioGeneral(0);
+    const total = conCalificaciones.reduce((sum, p) => sum + (Number(p.avg_calificacion) || 0), 0);
+    setPromedioGeneral(Number((total / conCalificaciones.length).toFixed(1)));
   };
 
+  // 🧭 Obtener ubicación una sola vez
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coords = [pos.coords.latitude, pos.coords.longitude];
+          setUserPosition(coords);
+          if (mapRef.current) mapRef.current.setView(coords, 14);
+        },
+        (err) => console.warn("No se pudo obtener ubicación:", err.message),
+        { enableHighAccuracy: true }
+      );
+    }
+  }, []);
+
+  // 🔄 Cargar puntos desde backend
   useEffect(() => {
     const fetchPuntos = async () => {
       try {
         const res = await fetch("http://localhost:4000/puntos");
+        if (!res.ok) throw new Error("Error fetching puntos");
         const data = await res.json();
-        if (res.ok) {
-          setPuntos(data);
-          calcularPromedioGeneral(data);
-        }
+        setPuntos(data);
+        calcularPromedioGeneral(data);
       } catch (err) {
         console.error("Error cargando puntos:", err);
       }
@@ -120,6 +134,7 @@ function Mapa() {
     fetchPuntos();
   }, []);
 
+  // 💾 Guardar punto con geocodificación inversa
   const handleSavePoint = async () => {
     try {
       if (!newPoint) return;
@@ -158,18 +173,20 @@ function Mapa() {
     }
   };
 
+  // 🗨️ Obtener comentarios
   const fetchComentarios = async (puntoId) => {
     try {
       const res = await fetch(`http://localhost:4000/comentarios/${puntoId}`);
+      if (!res.ok) throw new Error("Error fetching comentarios");
       const data = await res.json();
-      if (res.ok) setComentarios(data);
-      else setComentarios([]);
+      setComentarios(data);
     } catch (err) {
       console.error("Error obteniendo comentarios:", err);
       setComentarios([]);
     }
   };
 
+  // 💬 Enviar comentario
   const handleComentarioSubmit = async () => {
     if (!selectedPunto) return;
     try {
@@ -204,14 +221,9 @@ function Mapa() {
     }
   };
 
-  const handleVerComentarios = async (punto) => {
-    setSelectedPunto(punto);
-    await fetchComentarios(punto.id);
-  };
-
   return (
     <div style={{ height: "100%", width: "100%", position: "relative" }}>
-      {/* Indicador superior */}
+      {/* 📊 Indicador superior */}
       <div
         style={{
           position: "absolute",
@@ -233,23 +245,21 @@ function Mapa() {
       </div>
 
       {/* 🗺️ Mapa principal */}
-      <MapContainer center={[-33.45, -70.66]} zoom={12} style={{ height: "100%", width: "100%" }}>
+      <MapContainer
+        center={[-33.45, -70.66]}
+        zoom={12}
+        whenCreated={(map) => (mapRef.current = map)}
+        style={{ height: "100%", width: "100%" }}
+      >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <AddPoint onMapClick={(coords) => setNewPoint({ ...coords, nombre: "", tipo_residuo: "" })} />
 
-        <LocationMarker onLocationFound={() => {}} />
-
-        <AddPoint
-          onMapClick={(coords) => {
-            setNewPoint({ ...coords, nombre: "", tipo_residuo: "" });
-            setModalIsOpen(true);
-          }}
-        />
-
+        {/* 🔹 Puntos del mapa */}
         {puntos.map((p) => (
           <Marker
             key={p.id}
             position={[p.lat, p.lon]}
-            icon={p.nombre.toLowerCase().includes("duoc") ? duocIcon : icon}
+            icon={p.creador_nombre?.toLowerCase().includes("duoc") ? iconDuoc : iconDefault}
           >
             <Popup>
               <div style={{ textAlign: "center", minWidth: 180 }}>
@@ -264,11 +274,13 @@ function Mapa() {
                 </small>
                 <br />
                 <div style={{ marginTop: 6 }}>
-                  <StarRating value={p.avg_calificacion || 0} />{" "}
-                  <small>({p.comentarios_count || 0})</small>
+                  <StarRating value={p.avg_calificacion || 0} /> <small>({p.comentarios_count || 0})</small>
                 </div>
                 <button
-                  onClick={() => handleVerComentarios(p)}
+                  onClick={() => {
+                    setSelectedPunto(p);
+                    fetchComentarios(p.id);
+                  }}
                   style={{
                     marginTop: 8,
                     padding: "6px 10px",
@@ -285,9 +297,15 @@ function Mapa() {
             </Popup>
           </Marker>
         ))}
+
+        {/* 📍 Marcador de ubicación del usuario */}
+        {userPosition && <Marker position={userPosition} icon={iconUserLocation}></Marker>}
+
+        {/* 🔘 Botón volver a mi ubicación */}
+        <LocateButton userPosition={userPosition} />
       </MapContainer>
 
-      {/* Modal crear punto */}
+      {/* 🧩 Modal crear punto */}
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={() => setModalIsOpen(false)}
@@ -319,7 +337,7 @@ function Mapa() {
         </div>
       </Modal>
 
-      {/* Modal comentarios */}
+      {/* 💬 Modal comentarios */}
       <Modal
         isOpen={!!selectedPunto}
         onRequestClose={() => setSelectedPunto(null)}
@@ -346,7 +364,6 @@ function Mapa() {
             </p>
             <hr />
             <h4>Comentarios y calificaciones</h4>
-
             {comentarios.length === 0 ? (
               <p>No hay comentarios todavía.</p>
             ) : (

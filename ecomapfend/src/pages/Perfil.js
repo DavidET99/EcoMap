@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { FaTrash, FaUserCircle, FaMapMarkerAlt, FaCommentDots, FaRecycle } from "react-icons/fa";
 
 function Perfil() {
   const [usuario, setUsuario] = useState(null);
@@ -28,7 +29,7 @@ function Perfil() {
     fetchPerfil();
   }, []);
 
-  // 🔹 Cargar comentarios propios
+  // 🔹 Cargar comentarios
   useEffect(() => {
     const fetchComentarios = async () => {
       try {
@@ -37,11 +38,7 @@ function Perfil() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        if (res.ok) {
-          setComentarios(data);
-        } else {
-          console.error(data.error);
-        }
+        if (res.ok) setComentarios(data);
       } catch (err) {
         console.error("Error obteniendo comentarios:", err);
       }
@@ -49,11 +46,10 @@ function Perfil() {
     fetchComentarios();
   }, []);
 
-  // Eliminar punto
+  // 🗑️ Eliminar punto
   const eliminarPunto = async (id) => {
     const token = localStorage.getItem("token");
     if (!window.confirm("¿Seguro que deseas eliminar este punto?")) return;
-
     try {
       const res = await fetch(`http://localhost:4000/puntos/${id}`, {
         method: "DELETE",
@@ -61,21 +57,18 @@ function Perfil() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert("Punto eliminado ✅");
         setPuntos(puntos.filter((p) => p.id !== id));
-      } else {
-        alert(data.error || "Error al eliminar");
-      }
+        alert("Punto eliminado ✅");
+      } else alert(data.error || "Error al eliminar");
     } catch {
       alert("Error de conexión");
     }
   };
 
-  // Eliminar comentario (ajustado para seguir la lógica de eliminarPunto)
+  // 🗑️ Eliminar comentario
   const eliminarComentario = async (id) => {
     const token = localStorage.getItem("token");
     if (!window.confirm("¿Seguro que deseas eliminar este comentario?")) return;
-
     try {
       const res = await fetch(`http://localhost:4000/comentarios/${id}`, {
         method: "DELETE",
@@ -83,98 +76,164 @@ function Perfil() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert("Comentario eliminado ✅");
         setComentarios(comentarios.filter((c) => c.id !== id));
-      } else {
-        alert(data.error || "Error al eliminar");
-      }
+        alert("Comentario eliminado ✅");
+      } else alert(data.error || "Error al eliminar");
     } catch {
       alert("Error de conexión");
     }
   };
 
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
-  if (!usuario) return <p>Cargando...</p>;
+  if (error) return <p style={{ color: "red", textAlign: "center" }}>{error}</p>;
+  if (!usuario) return <p style={{ textAlign: "center" }}>Cargando perfil...</p>;
 
   return (
-    <div style={{ padding: "32px" }}>
-      <h2>Perfil de {usuario.nombre}</h2>
-      <p>
-        <b>Email:</b> {usuario.email}
-      </p>
-      <p>
-        <b>Miembro desde:</b>{" "}
-        {new Date(usuario.creado_en).toLocaleDateString()}
-      </p>
+    <div
+      style={{
+        padding: "32px",
+        maxWidth: "900px",
+        margin: "0 auto",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      {/* Encabezado del perfil */}
+      <div
+        style={{
+          background: "#f5f7fa",
+          borderRadius: "12px",
+          padding: "24px",
+          display: "flex",
+          alignItems: "center",
+          marginBottom: "32px",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+        }}
+      >
+        <FaUserCircle size={80} color="#2a78c8" style={{ marginRight: "20px" }} />
+        <div>
+          <h2 style={{ margin: 0, color: "#2a78c8" }}>Hola, {usuario.nombre}</h2>
+          <p style={{ margin: "6px 0" }}>
+            <b>Email:</b> {usuario.email}
+          </p>
+          <p style={{ margin: 0 }}>
+            <b>Miembro desde:</b>{" "}
+            {new Date(usuario.creado_en).toLocaleDateString()}
+          </p>
+        </div>
+      </div>
 
-      {/* Sección PUNTOS */}
-      <h3 style={{ marginTop: "24px" }}>Mis puntos de reciclaje:</h3>
-      {puntos.length === 0 ? (
-        <p>No has creado puntos aún.</p>
-      ) : (
-        <ul>
-          {puntos.map((p) => (
-            <li key={p.id} style={{ marginBottom: "8px" }}>
-              <b>{p.nombre}</b> - {p.tipo_residuo} (
-              {p.direccion || "Sin dirección"})
-              <button
-                onClick={() => eliminarPunto(p.id)}
+      {/* PUNTOS */}
+      <section>
+        <h3 style={{ color: "#2a78c8", display: "flex", alignItems: "center" }}>
+          <FaRecycle style={{ marginRight: 8 }} /> Mis puntos de reciclaje
+        </h3>
+        {puntos.length === 0 ? (
+          <p style={{ color: "#555" }}>Aún no has creado puntos.</p>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+              gap: "16px",
+              marginTop: "12px",
+            }}
+          >
+            {puntos.map((p) => (
+              <div
+                key={p.id}
                 style={{
-                  marginLeft: "10px",
-                  background: "#e74c3c",
-                  color: "white",
-                  border: "none",
-                  padding: "4px 8px",
-                  borderRadius: "4px",
-                  cursor: "pointer",
+                  background: "#fff",
+                  borderRadius: "10px",
+                  padding: "16px",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                 }}
               >
-                Borrar
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* Sección COMENTARIOS */}
-      <h3 style={{ marginTop: "32px" }}>Mis comentarios:</h3>
-      {comentarios.length === 0 ? (
-        <p>No has hecho comentarios aún.</p>
-      ) : (
-        <ul>
-          {comentarios.map((c) => (
-            <li
-              key={c.id}
-              style={{
-                marginBottom: "10px",
-                borderBottom: "1px solid #ccc",
-                paddingBottom: "6px",
-              }}
-            >
-              <div>
-                <b>En punto:</b> {c.punto_nombre} <br />
-                <b>Calificación:</b> ⭐ {c.calificacion}/5
-                <br />
-                <b>Comentario:</b> {c.comentario || "(sin texto)"}
+                <h4 style={{ marginBottom: "8px", color: "#333" }}>{p.nombre}</h4>
+                <p style={{ margin: "4px 0" }}>
+                  <FaMapMarkerAlt color="#2a78c8" /> {p.direccion || "Sin dirección"}
+                </p>
+                <p style={{ margin: "4px 0" }}>
+                  ♻️ <b>{p.tipo_residuo}</b>
+                </p>
+                <button
+                  onClick={() => eliminarPunto(p.id)}
+                  style={{
+                    marginTop: "8px",
+                    background: "#e74c3c",
+                    color: "white",
+                    border: "none",
+                    padding: "6px 10px",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <FaTrash /> Eliminar
+                </button>
               </div>
-              <button
-                onClick={() => eliminarComentario(c.id)}
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* COMENTARIOS */}
+      <section style={{ marginTop: "40px" }}>
+        <h3 style={{ color: "#2a78c8", display: "flex", alignItems: "center" }}>
+          <FaCommentDots style={{ marginRight: 8 }} /> Mis comentarios
+        </h3>
+        {comentarios.length === 0 ? (
+          <p style={{ color: "#555" }}>Aún no has hecho comentarios.</p>
+        ) : (
+          <div
+            style={{
+              marginTop: "12px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+            }}
+          >
+            {comentarios.map((c) => (
+              <div
+                key={c.id}
                 style={{
-                  marginTop: "6px",
-                  background: "#e74c3c",
-                  color: "white",
-                  border: "none",
-                  padding: "4px 8px",
-                  borderRadius: "4px",
-                  cursor: "pointer",
+                  background: "#fff",
+                  borderRadius: "10px",
+                  padding: "14px",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                 }}
               >
-                Eliminar
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+                <p style={{ margin: "4px 0" }}>
+                  <b>Punto:</b> {c.punto_nombre}
+                </p>
+                <p style={{ margin: "4px 0" }}>
+                  <b>Calificación:</b> ⭐ {c.calificacion}/5
+                </p>
+                <p style={{ margin: "4px 0" }}>
+                  <b>Comentario:</b> {c.comentario || "(sin texto)"}
+                </p>
+                <button
+                  onClick={() => eliminarComentario(c.id)}
+                  style={{
+                    marginTop: "8px",
+                    background: "#e74c3c",
+                    color: "white",
+                    border: "none",
+                    padding: "6px 10px",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <FaTrash /> Eliminar
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
