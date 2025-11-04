@@ -252,7 +252,12 @@ function Mapa() {
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <AddPoint onMapClick={(coords) => setNewPoint({ ...coords, nombre: "", tipo_residuo: "" })} />
+        <AddPoint
+          onMapClick={(coords) => {
+            setNewPoint({ ...coords, nombre: "", tipo_residuo: "" });
+            setModalIsOpen(true); // 👉 abre el modal después de hacer click
+          }}
+        />
 
         {/* 🔹 Puntos del mapa */}
         {puntos.map((p) => (
