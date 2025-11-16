@@ -12,12 +12,12 @@ const iconDefault = new L.Icon({
 });
 
 const iconDuoc = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/167/167707.png", // ícono tipo "escuela"
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/167/167707.png",
   iconSize: [36, 36],
 });
 
 const iconUserLocation = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/447/447031.png", // punto azul estilo gps
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/447/447031.png",
   iconSize: [28, 28],
 });
 
@@ -36,12 +36,66 @@ const StarRating = ({ value }) => {
   );
 };
 
+// 🔔 Componente Toast para notificaciones
+function Toast({ message, type = "info", onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000); // Desaparece después de 3 segundos
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const backgroundColor = type === "error" ? "#e74c3c" : "#21429d";
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: "20px",
+        right: "20px",
+        backgroundColor: backgroundColor,
+        color: "white",
+        padding: "12px 20px",
+        borderRadius: "8px",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+        zIndex: 4000,
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        animation: "slideIn 0.3s ease-out",
+        maxWidth: "300px",
+      }}
+    >
+      <span style={{ fontSize: "1.2rem" }}>
+        {type === "error" ? "⚠️" : "💡"}
+      </span>
+      <span style={{ fontSize: "0.9rem", fontWeight: "500" }}>
+        {message}
+      </span>
+    </div>
+  );
+}
+
 // 🎯 Captura clicks en el mapa
-function AddPoint({ onMapClick }) {
+function AddPoint({ onMapClick, isAuthenticated, onShowToast }) {
   useMapEvents({
     click(e) {
-      const { lat, lng } = e.latlng;
-      onMapClick({ lat, lon: lng });
+      // Verificar si el clic fue en el botón de ubicación
+      const target = e.originalEvent.target;
+      const isLocateButton = target.closest('button[title="Ir a mi ubicación"]');
+      
+      if (!isLocateButton) {
+        const { lat, lng } = e.latlng;
+        
+        // Verificar si el usuario está autenticado
+        if (!isAuthenticated) {
+          onShowToast("Debes iniciar sesión para crear puntos", "error");
+          return;
+        }
+        
+        onMapClick({ lat, lon: lng });
+      }
     },
   });
   return null;
@@ -51,7 +105,7 @@ function AddPoint({ onMapClick }) {
 function LocateButton({ userPosition }) {
   const map = useMap();
 
-  const handleClick = () => {
+  const handleClick = (e) => {
     if (userPosition) {
       map.flyTo(userPosition, 15, { duration: 1.2 });
     } else {
@@ -92,7 +146,15 @@ function Mapa() {
   const [calificacion, setCalificacion] = useState(5);
   const [promedioGeneral, setPromedioGeneral] = useState(0);
   const [userPosition, setUserPosition] = useState(null);
+  const [toast, setToast] = useState(null);
   const mapRef = useRef(null);
+  
+  const isAuthenticated = !!localStorage.getItem("token");
+
+  // 🔔 Función para mostrar toast
+  const showToast = (message, type = "info") => {
+    setToast({ message, type });
+  };
 
   // 🧮 Calcular promedio general
   const calcularPromedioGeneral = (data) => {
@@ -163,13 +225,14 @@ function Mapa() {
         calcularPromedioGeneral(data);
         setModalIsOpen(false);
         setNewPoint(null);
+        showToast("Punto creado exitosamente", "success");
       } else {
         const errData = await res.json();
-        alert(errData.error || "Error creando punto");
+        showToast(errData.error || "Error creando punto", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("Error obteniendo dirección automática");
+      showToast("Error obteniendo dirección automática", "error");
     }
   };
 
@@ -189,6 +252,13 @@ function Mapa() {
   // 💬 Enviar comentario
   const handleComentarioSubmit = async () => {
     if (!selectedPunto) return;
+    
+    // Verificar autenticación para comentarios también
+    if (!isAuthenticated) {
+      showToast("Debes iniciar sesión para comentar", "error");
+      return;
+    }
+    
     try {
       const token = localStorage.getItem("token");
       const res = await fetch("http://localhost:4000/comentarios", {
@@ -212,12 +282,13 @@ function Mapa() {
         const pdata = await refreshed.json();
         setPuntos(pdata);
         calcularPromedioGeneral(pdata);
+        showToast("Comentario enviado exitosamente", "success");
       } else {
-        alert(data.error || "Error al enviar comentario");
+        showToast(data.error || "Error al enviar comentario", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("Error al enviar comentario");
+      showToast("Error al enviar comentario", "error");
     }
   };
 
@@ -241,6 +312,11 @@ function Mapa() {
         <div>
           <b>{puntos.length}</b> puntos activos · Promedio general:{" "}
           <StarRating value={promedioGeneral} /> <small>({promedioGeneral})</small>
+          {!isAuthenticated && (
+            <div style={{ fontSize: "0.8rem", color: "#e74c3c", marginTop: 4 }}>
+              ⓘ Inicia sesión para crear puntos y comentar
+            </div>
+          )}
         </div>
       </div>
 
@@ -255,8 +331,10 @@ function Mapa() {
         <AddPoint
           onMapClick={(coords) => {
             setNewPoint({ ...coords, nombre: "", tipo_residuo: "" });
-            setModalIsOpen(true); // 👉 abre el modal después de hacer click
+            setModalIsOpen(true);
           }}
+          isAuthenticated={isAuthenticated}
+          onShowToast={showToast}
         />
 
         {/* 🔹 Puntos del mapa */}
@@ -310,35 +388,196 @@ function Mapa() {
         <LocateButton userPosition={userPosition} />
       </MapContainer>
 
-      {/* 🧩 Modal crear punto */}
+      {/* 🔔 Toast notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {/* 🧩 Modal crear punto - NUEVO DISEÑO MEJORADO */}
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={() => setModalIsOpen(false)}
         style={{
-          overlay: { backgroundColor: "rgba(0,0,0,0.4)", zIndex: 2000 },
-          content: { maxWidth: 420, margin: "auto", borderRadius: 12, padding: 20, zIndex: 2001 },
+          overlay: { 
+            backgroundColor: "rgba(0,0,0,0.6)", 
+            zIndex: 2000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          },
+          content: { 
+            maxWidth: "450px",
+            width: "90%",
+            margin: "auto",
+            borderRadius: "16px",
+            padding: "0",
+            border: "none",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+            zIndex: 2001,
+            position: "relative",
+            overflow: "hidden",
+          },
         }}
       >
-        <h3>Crear Punto de Reciclaje</h3>
-        <input
-          type="text"
-          placeholder="Nombre"
-          value={newPoint?.nombre || ""}
-          onChange={(e) => setNewPoint({ ...newPoint, nombre: e.target.value })}
-          style={{ width: "100%", marginBottom: 8, padding: 8 }}
-        />
-        <input
-          type="text"
-          placeholder="Tipo de residuo"
-          value={newPoint?.tipo_residuo || ""}
-          onChange={(e) => setNewPoint({ ...newPoint, tipo_residuo: e.target.value })}
-          style={{ width: "100%", marginBottom: 8, padding: 8 }}
-        />
-        <div>
-          <button onClick={handleSavePoint} style={{ marginRight: 8 }}>
-            Guardar
-          </button>
-          <button onClick={() => setModalIsOpen(false)}>Cancelar</button>
+        <div style={{
+          background: "linear-gradient(135deg, #21429d 0%, #2a78c8 100%)",
+          padding: "24px",
+          color: "white",
+          textAlign: "center",
+        }}>
+          <h3 style={{ 
+            margin: "0 0 8px 0", 
+            fontSize: "1.4rem",
+            fontWeight: "700",
+          }}>
+            🗺️ Crear Punto de Reciclaje
+          </h3>
+          <p style={{ 
+            margin: "0",
+            opacity: "0.9",
+            fontSize: "0.9rem",
+          }}>
+            Agrega un nuevo punto al mapa de reciclaje
+          </p>
+        </div>
+
+        <div style={{ padding: "28px" }}>
+          <div style={{ marginBottom: "20px" }}>
+            <label style={{
+              display: "block",
+              marginBottom: "8px",
+              fontWeight: "600",
+              color: "#2d3436",
+              fontSize: "0.95rem",
+            }}>
+              📝 Nombre del punto
+            </label>
+            <input
+              type="text"
+              placeholder="Ej: Punto de reciclaje comunitario"
+              value={newPoint?.nombre || ""}
+              onChange={(e) => setNewPoint({ ...newPoint, nombre: e.target.value })}
+              style={{ 
+                width: "100%", 
+                padding: "12px 16px",
+                border: "2px solid #e1e8ed",
+                borderRadius: "10px",
+                fontSize: "1rem",
+                transition: "all 0.3s ease",
+                outline: "none",
+              }}
+              onFocus={(e) => e.target.style.borderColor = "#21429d"}
+              onBlur={(e) => e.target.style.borderColor = "#e1e8ed"}
+            />
+          </div>
+
+          <div style={{ marginBottom: "28px" }}>
+            <label style={{
+              display: "block",
+              marginBottom: "8px",
+              fontWeight: "600",
+              color: "#2d3436",
+              fontSize: "0.95rem",
+            }}>
+              ♻️ Tipo de residuo
+            </label>
+            <input
+              type="text"
+              placeholder="Ej: Plástico, Vidrio, Papel, Orgánico..."
+              value={newPoint?.tipo_residuo || ""}
+              onChange={(e) => setNewPoint({ ...newPoint, tipo_residuo: e.target.value })}
+              style={{ 
+                width: "100%", 
+                padding: "12px 16px",
+                border: "2px solid #e1e8ed",
+                borderRadius: "10px",
+                fontSize: "1rem",
+                transition: "all 0.3s ease",
+                outline: "none",
+              }}
+              onFocus={(e) => e.target.style.borderColor = "#21429d"}
+              onBlur={(e) => e.target.style.borderColor = "#e1e8ed"}
+            />
+          </div>
+
+          <div style={{ 
+            background: "#f8f9fa", 
+            padding: "16px",
+            borderRadius: "10px",
+            marginBottom: "24px",
+            border: "1px solid #e9ecef",
+          }}>
+            <p style={{ 
+              margin: "0", 
+              fontSize: "0.85rem",
+              color: "#6c757d",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}>
+              📍 <span><b>Ubicación seleccionada:</b> Lat: {newPoint?.lat?.toFixed(4)}, Lng: {newPoint?.lon?.toFixed(4)}</span>
+            </p>
+          </div>
+
+          <div style={{ 
+            display: "flex", 
+            gap: "12px",
+            justifyContent: "flex-end",
+          }}>
+            <button 
+              onClick={() => setModalIsOpen(false)}
+              style={{
+                padding: "12px 24px",
+                borderRadius: "10px",
+                border: "2px solid #6c757d",
+                background: "transparent",
+                color: "#6c757d",
+                fontWeight: "600",
+                cursor: "pointer",
+                fontSize: "0.95rem",
+                transition: "all 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = "#6c757d";
+                e.target.style.color = "white";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "transparent";
+                e.target.style.color = "#6c757d";
+              }}
+            >
+              Cancelar
+            </button>
+            <button 
+              onClick={handleSavePoint}
+              style={{
+                padding: "12px 28px",
+                borderRadius: "10px",
+                background: "linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)",
+                color: "white",
+                border: "none",
+                fontWeight: "600",
+                cursor: "pointer",
+                fontSize: "0.95rem",
+                boxShadow: "0 4px 15px rgba(39, 174, 96, 0.3)",
+                transition: "all 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = "translateY(-2px)";
+                e.target.style.boxShadow = "0 6px 20px rgba(39, 174, 96, 0.4)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "0 4px 15px rgba(39, 174, 96, 0.3)";
+              }}
+            >
+              ✅ Guardar Punto
+            </button>
+          </div>
         </div>
       </Modal>
 
@@ -382,37 +621,74 @@ function Mapa() {
               ))
             )}
 
-            <textarea
-              placeholder="Escribe un comentario (opcional)"
-              value={nuevoComentario}
-              onChange={(e) => setNuevoComentario(e.target.value)}
-              style={{ width: "100%", marginTop: 8, padding: 8, height: 80, resize: "none" }}
-            />
-            <div style={{ marginTop: 8 }}>
-              <label>
-                Calificación:
-                <select
-                  value={calificacion}
-                  onChange={(e) => setCalificacion(Number(e.target.value))}
-                  style={{ marginLeft: 8 }}
+            {isAuthenticated ? (
+              <>
+                <textarea
+                  placeholder="Escribe un comentario (opcional)"
+                  value={nuevoComentario}
+                  onChange={(e) => setNuevoComentario(e.target.value)}
+                  style={{ width: "100%", marginTop: 8, padding: 8, height: 80, resize: "none" }}
+                />
+                <div style={{ marginTop: 8 }}>
+                  <label>
+                    Calificación:
+                    <select
+                      value={calificacion}
+                      onChange={(e) => setCalificacion(Number(e.target.value))}
+                      style={{ marginLeft: 8 }}
+                    >
+                      {[1, 2, 3, 4, 5].map((v) => (
+                        <option key={v} value={v}>
+                          {v}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <div style={{ marginTop: 12 }}>
+                  <button onClick={handleComentarioSubmit} style={{ marginRight: 8 }}>
+                    Enviar
+                  </button>
+                  <button onClick={() => setSelectedPunto(null)}>Cerrar</button>
+                </div>
+              </>
+            ) : (
+              <div style={{ textAlign: "center", padding: "20px" }}>
+                <p>💡 Debes iniciar sesión para comentar y calificar</p>
+                <button 
+                  onClick={() => window.location.href = "/login"}
+                  style={{
+                    padding: "10px 20px",
+                    backgroundColor: "#2a78c8",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                  }}
                 >
-                  {[1, 2, 3, 4, 5].map((v) => (
-                    <option key={v} value={v}>
-                      {v}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div style={{ marginTop: 12 }}>
-              <button onClick={handleComentarioSubmit} style={{ marginRight: 8 }}>
-                Enviar
-              </button>
-              <button onClick={() => setSelectedPunto(null)}>Cerrar</button>
-            </div>
+                  Ir a Login
+                </button>
+              </div>
+            )}
           </>
         )}
       </Modal>
+
+      {/* 🎨 Estilos para la animación del toast */}
+      <style>
+        {`
+          @keyframes slideIn {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }

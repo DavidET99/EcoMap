@@ -13,27 +13,23 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Página de inicio: login */}
-        <Route path="/" element={<Login />} />
+        {/* Página de inicio: Principal (accesible sin login) */}
+        <Route path="/" element={<Principal />} />
 
-        {/* Registro */}
+        {/* Login y Registro */}
+        <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
 
-        {/* Rutas protegidas */}
-        <Route
-          path="/principal"
-          element={isAuthenticated() ? <Principal /> : <Navigate to="/" />}
-        />
+        {/* Rutas protegidas - requieren login */}
         <Route
           path="/perfil"
-          element={isAuthenticated() ? <Perfil /> : <Navigate to="/" />}
+          element={isAuthenticated() ? <Perfil /> : <Navigate to="/login" />}
         />
-        <Route
-          path="/mapa"
-          element={isAuthenticated() ? <Mapa /> : <Navigate to="/" />}
-        />
+        
+        {/* Mapa individual (por si necesitas acceso directo) */}
+        <Route path="/mapa" element={<Mapa />} />
 
-        {/* Cualquier otra ruta redirige al login */}
+        {/* Cualquier otra ruta redirige a la página principal */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

@@ -1,16 +1,25 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaHome, FaMapMarkedAlt, FaUser, FaSignOutAlt, FaRecycle } from "react-icons/fa";
+import { FaHome, FaMapMarkedAlt, FaUser, FaSignOutAlt, FaRecycle, FaSignInAlt, FaUserPlus } from "react-icons/fa";
 import Mapa from "./Mapa";
 import Perfil from "./Perfil";
 
 function Principal() {
   const navigate = useNavigate();
   const [view, setView] = useState("inicio");
+  const isAuthenticated = !!localStorage.getItem("token");
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    navigate("/");
+    window.location.reload(); // Recargar para actualizar el estado de autenticación
+  };
+
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
+  const handleRegister = () => {
+    navigate("/registro");
   };
 
   return (
@@ -64,37 +73,88 @@ function Principal() {
             active={view === "mapa"}
             onClick={() => setView("mapa")}
           />
-          <MenuItem
-            icon={<FaUser />}
-            text="Perfil"
-            active={view === "perfil"}
-            onClick={() => setView("perfil")}
-          />
+          {isAuthenticated && (
+            <MenuItem
+              icon={<FaUser />}
+              text="Perfil"
+              active={view === "perfil"}
+              onClick={() => setView("perfil")}
+            />
+          )}
         </ul>
 
-        <button
-          onClick={handleLogout}
-          style={{
-            marginTop: "auto",
-            marginBottom: "24px",
-            padding: "12px 24px",
-            borderRadius: "8px",
-            background: "#e74c3c",
-            color: "#fff",
-            fontWeight: 600,
-            border: "none",
-            fontSize: "1rem",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            transition: "background 0.2s ease",
-          }}
-          onMouseEnter={(e) => (e.target.style.background = "#c0392b")}
-          onMouseLeave={(e) => (e.target.style.background = "#e74c3c")}
-        >
-          <FaSignOutAlt /> Cerrar sesión
-        </button>
+        <div style={{ marginTop: "auto", marginBottom: "24px", width: "100%", padding: "0 16px" }}>
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              style={{
+                width: "100%",
+                padding: "10px 16px",
+                borderRadius: "8px",
+                background: "#e74c3c",
+                color: "#fff",
+                fontWeight: 600,
+                border: "none",
+                fontSize: "0.9rem",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                transition: "background 0.2s ease",
+              }}
+              onMouseEnter={(e) => (e.target.style.background = "#c0392b")}
+              onMouseLeave={(e) => (e.target.style.background = "#e74c3c")}
+            >
+              <FaSignOutAlt /> Cerrar sesión
+            </button>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "center" }}>
+              <button
+                onClick={handleLogin}
+                style={{
+                  width: "90%",
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                  background: "#21429d",
+                  color: "#fff",
+                  fontWeight: 600,
+                  border: "none",
+                  fontSize: "0.9rem",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  transition: "background 0.2s ease",
+                }}
+              >
+                <FaSignInAlt /> Iniciar sesión
+              </button>
+              <button
+                onClick={handleRegister}
+                style={{
+                  width: "90%",
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                  background: "#27ae60",
+                  color: "#fff",
+                  fontWeight: 600,
+                  border: "none",
+                  fontSize: "0.9rem",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  transition: "background 0.2s ease",
+                }}
+              >
+                <FaUserPlus /> Registrarse
+              </button>
+            </div>
+          )}
+        </div>
       </nav>
 
       {/* 🌎 Contenido principal */}
@@ -133,25 +193,36 @@ function Principal() {
               Tu herramienta para encontrar, registrar y valorar puntos de reciclaje
               en tu comunidad. 🌍♻️
             </p>
+            
+            {!isAuthenticated && (
+              <div style={{ 
+                background: "#fffae6", 
+                border: "1px solid #ffd166",
+                borderRadius: "8px",
+                padding: "16px",
+                margin: "20px 0",
+              }}>
+                <p style={{ margin: 0, color: "#8a6d3b" }}>
+                  💡 <b>Inicia sesión</b> para crear puntos de reciclaje y comentar en los existentes
+                </p>
+              </div>
+            )}
+
             <div
               style={{
                 marginTop: "30px",
                 display: "flex",
                 justifyContent: "center",
                 gap: "20px",
+                flexWrap: "wrap",
               }}
             >
+              {/* SOLO BOTÓN DE IR AL MAPA */}
               <button
                 onClick={() => setView("mapa")}
                 style={buttonStyle("#21429d")}
               >
                 Ir al mapa
-              </button>
-              <button
-                onClick={() => setView("perfil")}
-                style={buttonStyle("#27ae60")}
-              >
-                Ver mi perfil
               </button>
             </div>
           </div>
@@ -173,7 +244,7 @@ function Principal() {
           </div>
         )}
 
-        {view === "perfil" && (
+        {view === "perfil" && isAuthenticated && (
           <div
             style={{
               width: "100%",
