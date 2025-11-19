@@ -98,26 +98,40 @@ function Perfil() {
 
   // Eliminar punto 
   const eliminarPunto = async (id) => {
-    if (!window.confirm("¿Seguro que deseas eliminar este punto?")) return;
-    try {
-      await apiService.deletePunto(id);
-      setPuntos(puntos.filter((p) => p.id !== id));
-      showToast("Punto eliminado exitosamente", "success");
-    } catch (error) {
-      showToast(error.message || "Error eliminando punto", "error");
-    }
+    showToast("¿Estás seguro de eliminar este punto?", "info");
+    
+    setTimeout(() => {
+      const shouldDelete = window.confirm("¿Estás seguro de eliminar este punto?");
+      if (shouldDelete) {
+        apiService.deletePunto(id)
+          .then(() => {
+            setPuntos(puntos.filter((p) => p.id !== id));
+            showToast("Punto eliminado exitosamente", "success");
+          })
+          .catch(error => {
+            showToast(error.message || "Error eliminando punto", "error");
+          });
+      }
+    }, 100);
   };
 
   // Eliminar comentario
   const eliminarComentario = async (id) => {
-    if (!window.confirm("¿Seguro que deseas eliminar este comentario?")) return;
-    try {
-      await apiService.deleteComentario(id);
-      setComentarios(comentarios.filter((c) => c.id !== id));
-      showToast("Comentario eliminado exitosamente", "success");
-    } catch (error) {
-      showToast(error.message || "Error eliminando comentario", "error");
-    }
+    showToast("¿Estás seguro de eliminar este comentario?", "info");
+    
+    setTimeout(() => {
+      const shouldDelete = window.confirm("¿Estás seguro de eliminar este comentario?");
+      if (shouldDelete) {
+        apiService.deleteComentario(id)
+          .then(() => {
+            setComentarios(comentarios.filter((c) => c.id !== id));
+            showToast("Comentario eliminado exitosamente", "success");
+          })
+          .catch(error => {
+            showToast(error.message || "Error eliminando comentario", "error");
+          });
+      }
+    }, 100);
   };
 
   if (loading) return <p style={{ textAlign: "center", padding: "20px", fontSize: "clamp(1rem, 3vw, 1.2rem)" }}>Cargando perfil...</p>;

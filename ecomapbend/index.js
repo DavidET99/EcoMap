@@ -11,13 +11,9 @@ const app = express();
 
 // CORS actualizado para producción
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'https://ecomapmobile.netlify.app',
-    'https://*.netlify.app'
-  ],
+  origin: true,
   credentials: true
-}));
+}));s
 
 app.use(express.json());
 

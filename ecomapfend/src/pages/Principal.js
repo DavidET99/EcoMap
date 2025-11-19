@@ -175,22 +175,22 @@ function Principal() {
               <button
                 onClick={handleLogout}
                 style={{
-                    flex: isMobile ? 1 : "auto",
-                    width: isMobile ? "auto" : "100%",
-                    padding: isMobile ? "10px 12px" : "12px 16px",
-                    borderRadius: "8px",
-                    background: "#21429d",
-                    color: "#fff",
-                    fontWeight: 600,
-                    border: "none",
-                    fontSize: isMobile ? "0.85rem" : "clamp(0.9rem, 3vw, 1rem)",
-                    cursor: "pointer",
-                     display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "6px",
-                    minHeight: "40px",
-                    whiteSpace: "nowrap",
+                  width: "100%",
+                  padding: "12px 16px",
+                  borderRadius: "8px",
+                  background: "#e74c3c",
+                  color: "#fff",
+                  fontWeight: 600,
+                  border: "none",
+                  fontSize: "clamp(0.9rem, 3vw, 1rem)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  bottom:"15px",
+                  minHeight: "44px",
+                  flexShrink: 0,
 
                 }}
               >
