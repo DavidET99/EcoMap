@@ -188,7 +188,7 @@ function Principal() {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "8px",
-                  bottom:"15px",
+                  bottom:"35px",
                   minHeight: "44px",
                   flexShrink: 0,
 
