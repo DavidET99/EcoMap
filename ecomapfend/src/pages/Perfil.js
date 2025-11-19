@@ -8,8 +8,19 @@ function Perfil() {
   const [comentarios, setComentarios] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // 🔹 Cargar perfil y puntos
+  // Detectar cambios de tamaño de pantalla
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Cargar perfil y puntos
   useEffect(() => {
     const fetchPerfil = async () => {
       try {
@@ -25,7 +36,7 @@ function Perfil() {
     fetchPerfil();
   }, []);
 
-  // 🔹 Cargar comentarios
+  // Cargar comentarios
   useEffect(() => {
     const fetchComentarios = async () => {
       try {
@@ -38,7 +49,7 @@ function Perfil() {
     fetchComentarios();
   }, []);
 
-  // 🗑️ Eliminar punto
+  // Eliminar punto
   const eliminarPunto = async (id) => {
     if (!window.confirm("¿Seguro que deseas eliminar este punto?")) return;
     try {
@@ -50,7 +61,7 @@ function Perfil() {
     }
   };
 
-  // 🗑️ Eliminar comentario
+  // Eliminar comentario
   const eliminarComentario = async (id) => {
     if (!window.confirm("¿Seguro que deseas eliminar este comentario?")) return;
     try {
@@ -81,28 +92,29 @@ function Perfil() {
           fontFamily: "Arial, sans-serif",
           width: "100%",
           boxSizing: "border-box",
+          height: "100%",
         }}
       >
-        {/* Encabezado del perfil - RESPONSIVE */}
+        {/* Encabezado del perfil*/}
         <div
           style={{
             background: "#f5f7fa",
             borderRadius: "12px",
             padding: "clamp(16px, 3vw, 24px)",
             display: "flex",
-            flexDirection: window.innerWidth < 768 ? "column" : "row",
-            alignItems: window.innerWidth < 768 ? "center" : "flex-start",
-            textAlign: window.innerWidth < 768 ? "center" : "left",
+            flexDirection: isMobile ? "column" : "row",
+            alignItems: isMobile ? "center" : "flex-start",
+            textAlign: isMobile ? "center" : "left",
             marginBottom: "clamp(24px, 4vw, 32px)",
             boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
             gap: "clamp(16px, 3vw, 20px)",
           }}
         >
           <FaUserCircle 
-            size={window.innerWidth < 768 ? 60 : 80} 
+            size={isMobile ? 60 : 80} 
             color="#2a78c8" 
             style={{ 
-              marginRight: window.innerWidth < 768 ? "0" : "20px" 
+              marginRight: isMobile ? "0" : "20px" 
             }} 
           />
           <div style={{ flex: 1 }}>
@@ -129,7 +141,7 @@ function Perfil() {
           </div>
         </div>
 
-        {/* PUNTOS - RESPONSIVE */}
+        {/* PUNTOS*/}
         <section>
           <h3 style={{ 
             color: "#2a78c8", 
@@ -138,7 +150,7 @@ function Perfil() {
             fontSize: "clamp(1.1rem, 3.5vw, 1.3rem)",
             marginBottom: "clamp(12px, 2vw, 16px)"
           }}>
-            <FaRecycle style={{ marginRight: "8px" }} /> Mis puntos de reciclaje
+            <FaRecycle style={{ marginRight: "8px" }} /> Mis puntos de reciclaje ({puntos.length})
           </h3>
           {puntos.length === 0 ? (
             <p style={{ 
@@ -153,9 +165,12 @@ function Perfil() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: window.innerWidth < 768 ? "1fr" : "repeat(auto-fill, minmax(260px, 1fr))",
+                gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(260px, 1fr))",
                 gap: "clamp(12px, 2vw, 16px)",
                 marginTop: "12px",
+                maxHeight: isMobile ? "400px" : "none",
+                overflowY: isMobile ? "auto" : "visible",
+                padding: isMobile ? "4px" : "0",
               }}
             >
               {puntos.map((p) => (
@@ -166,6 +181,7 @@ function Perfil() {
                     borderRadius: "10px",
                     padding: "clamp(12px, 2vw, 16px)",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                    minHeight: "140px",
                   }}
                 >
                   <h4 style={{ 
@@ -217,7 +233,7 @@ function Perfil() {
           )}
         </section>
 
-        {/* COMENTARIOS - RESPONSIVE */}
+        {/* COMENTARIOS */}
         <section style={{ marginTop: "clamp(30px, 5vw, 40px)" }}>
           <h3 style={{ 
             color: "#2a78c8", 
@@ -226,7 +242,7 @@ function Perfil() {
             fontSize: "clamp(1.1rem, 3.5vw, 1.3rem)",
             marginBottom: "clamp(12px, 2vw, 16px)"
           }}>
-            <FaCommentDots style={{ marginRight: "8px" }} /> Mis comentarios
+            <FaCommentDots style={{ marginRight: "8px" }} /> Mis comentarios ({comentarios.length})
           </h3>
           {comentarios.length === 0 ? (
             <p style={{ 
@@ -244,6 +260,9 @@ function Perfil() {
                 display: "flex",
                 flexDirection: "column",
                 gap: "clamp(10px, 2vw, 12px)",
+                maxHeight: isMobile ? "400px" : "none",
+                overflowY: isMobile ? "auto" : "visible",
+                padding: isMobile ? "4px" : "0",
               }}
             >
               {comentarios.map((c) => (
@@ -254,6 +273,7 @@ function Perfil() {
                     borderRadius: "10px",
                     padding: "clamp(12px, 2vw, 14px)",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                    minHeight: "120px",
                   }}
                 >
                   <p style={{ 

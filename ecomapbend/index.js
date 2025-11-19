@@ -24,7 +24,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 4000;
 
 /* ---------------------------
-   HEALTH CHECK PARA RENDER (NUEVO)
+   HEALTH CHECK PARA RENDER
 --------------------------- */
 
 app.get("/health", async (req, res) => {

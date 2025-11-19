@@ -5,8 +5,8 @@ const pool = new Pool({
   port: 5432,
   database: "postgres",
   user: "postgres.wcpevqbaakplaymlcaso",
-  password: "ycjaf3vea3.", // 👈 la misma que te da Supabase
-  ssl: { rejectUnauthorized: false }, // importante para conexiones seguras
+  password: "ycjaf3vea3.", 
+  ssl: { rejectUnauthorized: false }, 
 });
 
 module.exports = pool;

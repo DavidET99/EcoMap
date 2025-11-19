@@ -16,7 +16,6 @@ function Registro() {
     setLoading(true);
     
     try {
-      // ✅ SOLUCIÓN: No necesitas asignar a una variable si no la usas
       await apiService.register(nombre, email, password);
       
       setMensaje('Registro exitoso, redirigiendo...');

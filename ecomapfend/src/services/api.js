@@ -116,6 +116,6 @@ class ApiService {
   }
 }
 
-// Crear instancia y exportar (SOLUCIÓN 2)
+
 const apiServiceInstance = new ApiService();
 export default apiServiceInstance;

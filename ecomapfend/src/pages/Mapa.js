@@ -6,7 +6,7 @@ import apiService from "../services/api";
 
 Modal.setAppElement("#root");
 
-// 🧭 Iconos personalizados
+// Iconos personalizados
 const iconDefault = new L.Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
   iconSize: [32, 32],
@@ -22,7 +22,7 @@ const iconUserLocation = new L.Icon({
   iconSize: [28, 28],
 });
 
-// ⭐ Componente estrellas visual
+// Componente estrellas visual
 const StarRating = ({ value }) => {
   const v = Number(value) || 0;
   const full = Math.floor(v);
@@ -37,12 +37,12 @@ const StarRating = ({ value }) => {
   );
 };
 
-// 🔔 Componente Toast para notificaciones
+// Componente Toast para notificaciones
 function Toast({ message, type = "info", onClose }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose();
-    }, 3000); // Desaparece después de 3 segundos
+    }, 3000); 
 
     return () => clearTimeout(timer);
   }, [onClose]);
@@ -78,7 +78,7 @@ function Toast({ message, type = "info", onClose }) {
   );
 }
 
-// 🎯 Captura clicks en el mapa
+// Captura clicks en el mapa
 function AddPoint({ onMapClick, isAuthenticated, onShowToast }) {
   useMapEvents({
     click(e) {
@@ -102,12 +102,12 @@ function AddPoint({ onMapClick, isAuthenticated, onShowToast }) {
   return null;
 }
 
-// 📍 Botón para volver a la ubicación del usuario
+// Botón para volver a la ubicación del usuario
 function LocateButton({ userPosition }) {
   const map = useMap();
 
   const handleClick = (e) => {
-    e.stopPropagation(); // 👈 Evita que se active el AddPoint
+    e.stopPropagation(); 
     if (userPosition) {
       map.flyTo(userPosition, 15, { duration: 1.2 });
     } else {
@@ -120,21 +120,21 @@ function LocateButton({ userPosition }) {
       onClick={handleClick}
       style={{
         position: "absolute",
-        bottom: "80px", // 👈 Más arriba para móviles
+        bottom: "20px", 
         right: "20px",
         zIndex: 3000,
         backgroundColor: "white",
         border: "1px solid #ccc",
         borderRadius: "50%",
-        width: "50px", // 👈 Más grande para móviles
+        width: "50px",
         height: "50px",
         cursor: "pointer",
         boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-        fontSize: "20px", // 👈 Texto más grande
+        fontSize: "20px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        minHeight: "44px", // 👈 Mínimo para touch
+        minHeight: "44px",
       }}
       title="Ir a mi ubicación"
     >
@@ -154,16 +154,27 @@ function Mapa() {
   const [promedioGeneral, setPromedioGeneral] = useState(0);
   const [userPosition, setUserPosition] = useState(null);
   const [toast, setToast] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const mapRef = useRef(null);
   
   const isAuthenticated = !!localStorage.getItem("token");
 
-  // 🔔 Función para mostrar toast
+  //  Detectar cambios de tamaño de pantalla
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  //  Función para mostrar toast
   const showToast = (message, type = "info") => {
     setToast({ message, type });
   };
 
-  // 🧮 Calcular promedio general
+  //  Calcular promedio general
   const calcularPromedioGeneral = (data) => {
     if (!data || data.length === 0) return setPromedioGeneral(0);
     const conCalificaciones = data.filter((p) => Number(p.comentarios_count) > 0);
@@ -172,7 +183,7 @@ function Mapa() {
     setPromedioGeneral(Number((total / conCalificaciones.length).toFixed(1)));
   };
 
-  // 🧭 Obtener ubicación una sola vez
+  //  Obtener ubicación una sola vez
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -187,7 +198,7 @@ function Mapa() {
     }
   }, []);
 
-  // 🔄 Cargar puntos desde backend
+  //  Cargar puntos desde backend
   useEffect(() => {
     const fetchPuntos = async () => {
       try {
@@ -201,7 +212,7 @@ function Mapa() {
     fetchPuntos();
   }, []);
 
-  // 💾 Guardar punto con geocodificación inversa
+  // Guardar punto con geocodificación inversa
   const handleSavePoint = async () => {
     try {
       if (!newPoint) return;
@@ -228,7 +239,7 @@ function Mapa() {
     }
   };
 
-  // 🗨️ Obtener comentarios
+  // Obtener comentarios
   const fetchComentarios = async (puntoId) => {
     try {
       const data = await apiService.getComentarios(puntoId);
@@ -239,7 +250,7 @@ function Mapa() {
     }
   };
 
-  // 💬 Enviar comentario
+  // Enviar comentario
   const handleComentarioSubmit = async () => {
     if (!selectedPunto) return;
     
@@ -280,16 +291,16 @@ function Mapa() {
       </head>
       
       <div className="map-container" style={{ 
-        height: "100vh", 
-        width: "100vw", 
+        height: isMobile ? "calc(100vh - 60px)" : "100vh", 
+        width: "100%", 
         position: "relative",
         overflow: "hidden"
       }}>
-        {/* 📊 Indicador superior - MEJORADO PARA MÓVILES */}
+        {/* Indicador superior*/}
         <div
           style={{
             position: "absolute",
-            top: "10px",
+            top: isMobile ? "70px" : "10px", 
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 3000,
@@ -298,7 +309,7 @@ function Mapa() {
             borderRadius: "10px",
             boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
             textAlign: "center",
-            width: "90%",
+            width: isMobile ? "95%" : "90%",
             maxWidth: "400px",
             fontSize: "clamp(0.8rem, 3vw, 0.9rem)",
           }}
@@ -314,7 +325,7 @@ function Mapa() {
           </div>
         </div>
 
-        {/* 🗺️ Mapa principal */}
+        {/*  Mapa principal */}
         <MapContainer
           center={[-33.45, -70.66]}
           zoom={12}
@@ -331,7 +342,7 @@ function Mapa() {
             onShowToast={showToast}
           />
 
-          {/* 🔹 Puntos del mapa */}
+          {/* Puntos del mapa */}
           {puntos.map((p) => (
             <Marker
               key={p.id}
@@ -377,14 +388,14 @@ function Mapa() {
             </Marker>
           ))}
 
-          {/* 📍 Marcador de ubicación del usuario */}
+          {/* Marcador de ubicación del usuario */}
           {userPosition && <Marker position={userPosition} icon={iconUserLocation}></Marker>}
 
-          {/* 🔘 Botón volver a mi ubicación */}
+          {/* Botón volver a mi ubicación */}
           <LocateButton userPosition={userPosition} />
         </MapContainer>
 
-        {/* 🔔 Toast notifications */}
+        {/* Toast notifications */}
         {toast && (
           <Toast
             message={toast.message}
@@ -393,7 +404,7 @@ function Mapa() {
           />
         )}
 
-        {/* 🧩 Modal crear punto - RESPONSIVE */}
+        {/* Modal crear punto*/}
         <Modal
           isOpen={modalIsOpen}
           onRequestClose={() => setModalIsOpen(false)}
@@ -588,7 +599,7 @@ function Mapa() {
           </div>
         </Modal>
 
-        {/* 💬 Modal comentarios - RESPONSIVE */}
+        {/*Modal comentarios*/}
         <Modal
           isOpen={!!selectedPunto}
           onRequestClose={() => setSelectedPunto(null)}
@@ -736,7 +747,7 @@ function Mapa() {
           )}
         </Modal>
 
-        {/* 🎨 Estilos para la animación del toast */}
+        {/* Estilos para la animación del toast */}
         <style>
           {`
             @keyframes slideIn {
@@ -750,12 +761,11 @@ function Mapa() {
               }
             }
             
-            /* Mejoras para touch en móviles */
             button {
               min-height: 44px;
             }
             input, select, textarea {
-              font-size: 16px; /* Evita zoom en iOS */
+              font-size: 16px;
             }
           `}
         </style>

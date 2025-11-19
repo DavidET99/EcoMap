@@ -11,7 +11,7 @@ function Principal() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isAuthenticated = !!localStorage.getItem("token");
 
-  // 🔍 Detectar cambios de tamaño de pantalla
+  // Detectar cambios de tamaño de pantalla
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
@@ -62,7 +62,7 @@ function Principal() {
           flexDirection: isMobile ? "column" : "row",
         }}
       >
-        {/* 📱 Botón hamburguesa para móviles */}
+        {/* Botón para móviles */}
         {isMobile && (
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -89,19 +89,19 @@ function Principal() {
           </button>
         )}
 
-        {/* 🌿 Barra lateral - RESPONSIVE */}
+        {/* Barra lateral*/}
         <nav
           style={{
             width: isMobile ? (sidebarOpen ? "100%" : "0") : "240px",
-            background: "rgba(255, 255, 255, 0.95)",
+            background: "rgba(255, 255, 255, 0.98)",
             backdropFilter: "blur(10px)",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            padding: isMobile ? "60px 0 40px 0" : "40px 0",
+            padding: isMobile ? "80px 0 30px 0" : "40px 0",
             boxShadow: isMobile ? "none" : "2px 0 15px rgba(0,0,0,0.1)",
             transition: "all 0.3s ease",
-            overflow: "hidden",
+            overflow: isMobile ? "auto" : "hidden",
             position: isMobile ? "fixed" : "relative",
             height: isMobile ? "100vh" : "auto",
             zIndex: 999,
@@ -160,18 +160,20 @@ function Principal() {
             )}
           </ul>
 
+          {/* botones horizontales */}
           <div style={{ 
             marginTop: "auto", 
             marginBottom: "24px", 
             width: "100%", 
-            padding: "0 16px" 
+            padding: "0 16px",
+            flexShrink: 0,
           }}>
             {isAuthenticated ? (
               <button
                 onClick={handleLogout}
                 style={{
                   width: "100%",
-                  padding: "clamp(12px, 3vw, 14px)",
+                  padding: "12px 16px",
                   borderRadius: "8px",
                   background: "#e74c3c",
                   color: "#fff",
@@ -183,64 +185,65 @@ function Principal() {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "8px",
-                  transition: "background 0.2s ease",
                   minHeight: "44px",
                 }}
-                onMouseEnter={(e) => (e.target.style.background = "#c0392b")}
-                onMouseLeave={(e) => (e.target.style.background = "#e74c3c")}
               >
                 <FaSignOutAlt /> Cerrar sesión
               </button>
             ) : (
+              // BOTONES (Login + Registro) Versión compacta
               <div style={{ 
                 display: "flex", 
-                flexDirection: "column", 
+                flexDirection: isMobile ? "row" : "column",
                 gap: "8px", 
-                alignItems: "center" 
+                alignItems: "center",
+                justifyContent: "center",
               }}>
                 <button
                   onClick={handleLogin}
                   style={{
-                    width: "100%",
-                    padding: "clamp(12px, 3vw, 14px)",
+                    flex: isMobile ? 1 : "auto",
+                    width: isMobile ? "auto" : "100%",
+                    padding: isMobile ? "10px 12px" : "12px 16px",
                     borderRadius: "8px",
                     background: "#21429d",
                     color: "#fff",
                     fontWeight: 600,
                     border: "none",
-                    fontSize: "clamp(0.9rem, 3vw, 1rem)",
+                    fontSize: isMobile ? "0.85rem" : "clamp(0.9rem, 3vw, 1rem)",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: "8px",
-                    transition: "background 0.2s ease",
-                    minHeight: "44px",
+                    gap: "6px",
+                    minHeight: "40px",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  <FaSignInAlt /> Iniciar sesión
+                  <FaSignInAlt /> {isMobile ? "Entrar" : "Iniciar sesión"}
                 </button>
                 <button
                   onClick={handleRegister}
                   style={{
-                    width: "100%",
-                    padding: "clamp(12px, 3vw, 14px)",
+                    flex: isMobile ? 1 : "auto",
+                    width: isMobile ? "auto" : "100%",
+                    padding: isMobile ? "10px 12px" : "12px 16px",
                     borderRadius: "8px",
                     background: "#27ae60",
                     color: "#fff",
                     fontWeight: 600,
                     border: "none",
-                    fontSize: "clamp(0.9rem, 3vw, 1rem)",
+                    fontSize: isMobile ? "0.85rem" : "clamp(0.9rem, 3vw, 1rem)",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: "8px",
-                    transition: "background 0.2s ease",
-                    minHeight: "44px",
+                    gap: "6px",
+                    minHeight: "40px",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  <FaUserPlus /> Registrarse
+                  <FaUserPlus /> {isMobile ? "Registro" : "Registrarse"}
                 </button>
               </div>
             )}
@@ -263,7 +266,7 @@ function Principal() {
           />
         )}
 
-        {/* 🌎 Contenido principal - RESPONSIVE */}
+        {/* Contenido principal */}
         <main
           style={{
             flex: 1,
@@ -395,7 +398,7 @@ function Principal() {
         </main>
       </div>
 
-      {/* 🎨 Estilos de animación */}
+      {/* Estilos de animación */}
       <style>
         {`
           @keyframes fadeIn {
@@ -408,7 +411,7 @@ function Principal() {
   );
 }
 
-/* 🔹 Componente reutilizable para los ítems del menú - RESPONSIVE */
+/* ítems del menú */
 function MenuItem({ icon, text, active, onClick, isMobile }) {
   return (
     <li

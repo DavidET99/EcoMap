@@ -13,7 +13,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Página de inicio: Principal (accesible sin login) */}
+        {/* Página de inicio: Principal */}
         <Route path="/" element={<Principal />} />
 
         {/* Login y Registro */}
@@ -26,10 +26,9 @@ function App() {
           element={isAuthenticated() ? <Perfil /> : <Navigate to="/login" />}
         />
         
-        {/* Mapa individual (por si necesitas acceso directo) */}
+        {/* Mapa individual */}
         <Route path="/mapa" element={<Mapa />} />
 
-        {/* Cualquier otra ruta redirige a la página principal */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
