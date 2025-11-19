@@ -1,13 +1,15 @@
 {
-  "name": "ecomapbend",
+  "name": "ecomap-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Backend API para EcoMap - Puntos de Reciclaje",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["recycling", "map", "api", "backend"],
+  "author": "Tu Nombre",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -16,5 +18,8 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

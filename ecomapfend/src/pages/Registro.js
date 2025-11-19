@@ -1,31 +1,30 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import apiService from '../services/api';
 
 function Registro() {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mensaje, setMensaje] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje('');
+    setLoading(true);
+    
     try {
-      const res = await fetch('http://localhost:4000/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, email, password }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMensaje('Registro exitoso, redirigiendo...');
-        setTimeout(() => navigate('/'), 1500);
-      } else {
-        setMensaje(data.error || 'Error al registrar');
-      }
-    } catch {
-      setMensaje('Error de conexión');
+      // ✅ SOLUCIÓN: No necesitas asignar a una variable si no la usas
+      await apiService.register(nombre, email, password);
+      
+      setMensaje('Registro exitoso, redirigiendo...');
+      setTimeout(() => navigate('/'), 1500);
+    } catch (error) {
+      setMensaje(error.message || 'Error al registrar');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -157,19 +156,24 @@ function Registro() {
               }}
             />
           </div>
-          <button type="submit" style={{
-            width: '100%',
-            padding: '10px',
-            background: '#5ea1cbff',
-            color: '#fff',
-            fontWeight: 600,
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '16px',
-            cursor: 'pointer',
-            marginBottom: '8px'
-          }}>
-            Registrarse
+          <button 
+            type="submit" 
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '10px',
+              background: loading ? '#cccccc' : '#5ea1cbff',
+              color: '#fff',
+              fontWeight: 600,
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '16px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              marginBottom: '8px',
+              opacity: loading ? 0.7 : 1
+            }}
+          >
+            {loading ? 'Registrando...' : 'Registrarse'}
           </button>
         </form>
         <button
@@ -188,7 +192,15 @@ function Registro() {
         >
           Volver a Login
         </button>
-        {mensaje && <p style={{color:'green', marginTop:'16px', textAlign:'center'}}>{mensaje}</p>}
+        {mensaje && (
+          <p style={{
+            color: mensaje.includes('éxito') ? 'green' : 'red', 
+            marginTop:'16px', 
+            textAlign:'center'
+          }}>
+            {mensaje}
+          </p>
+        )}
       </div>
     </div>
   );

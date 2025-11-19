@@ -1,30 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import apiService from '../services/api';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
+    
     try {
-      const res = await fetch('http://localhost:4000/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        localStorage.setItem('token', data.token);
-        navigate('/principal');
-      } else {
-        setError(data.error || 'Error al iniciar sesión');
-      }
-    } catch {
-      setError('Error de conexión');
+      // ✅ NUEVO: Usar apiService en lugar de fetch directo
+      const result = await apiService.login(email, password);
+      
+      localStorage.setItem('token', result.token);
+      navigate('/principal');
+    } catch (error) {
+      setError(error.message || 'Error al iniciar sesión');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -138,19 +137,24 @@ function Login() {
               }}
             />
           </div>
-          <button type="submit" style={{
-            width: '100%',
-            padding: '10px',
-            background: '#5ea1cbff',
-            color: '#fff',
-            fontWeight: 600,
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '16px',
-            cursor: 'pointer',
-            marginBottom: '8px'
-          }}>
-            Entrar
+          <button 
+            type="submit" 
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '10px',
+              background: loading ? '#cccccc' : '#5ea1cbff',
+              color: '#fff',
+              fontWeight: 600,
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '16px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              marginBottom: '8px',
+              opacity: loading ? 0.7 : 1
+            }}
+          >
+            {loading ? 'Iniciando sesión...' : 'Entrar'}
           </button>
         </form>
         <button

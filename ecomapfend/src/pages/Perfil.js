@@ -1,29 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { FaTrash, FaUserCircle, FaMapMarkerAlt, FaCommentDots, FaRecycle } from "react-icons/fa";
+import apiService from "../services/api";
 
 function Perfil() {
   const [usuario, setUsuario] = useState(null);
   const [puntos, setPuntos] = useState([]);
   const [comentarios, setComentarios] = useState([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   // 🔹 Cargar perfil y puntos
   useEffect(() => {
     const fetchPerfil = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:4000/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setUsuario(data.usuario);
-          setPuntos(data.puntos);
-        } else {
-          setError(data.error || "Error al cargar perfil");
-        }
-      } catch {
-        setError("Error de conexión");
+        // ✅ NUEVO: Usar apiService en lugar de fetch directo
+        const data = await apiService.getPerfil();
+        setUsuario(data.usuario);
+        setPuntos(data.puntos);
+      } catch (error) {
+        setError(error.message || "Error al cargar perfil");
+      } finally {
+        setLoading(false);
       }
     };
     fetchPerfil();
@@ -33,12 +30,9 @@ function Perfil() {
   useEffect(() => {
     const fetchComentarios = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:4000/mis-comentarios", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (res.ok) setComentarios(data);
+        // ✅ NUEVO: Usar apiService en lugar de fetch directo
+        const data = await apiService.getMisComentarios();
+        setComentarios(data);
       } catch (err) {
         console.error("Error obteniendo comentarios:", err);
       }
@@ -48,44 +42,33 @@ function Perfil() {
 
   // 🗑️ Eliminar punto
   const eliminarPunto = async (id) => {
-    const token = localStorage.getItem("token");
     if (!window.confirm("¿Seguro que deseas eliminar este punto?")) return;
     try {
-      const res = await fetch(`http://localhost:4000/puntos/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setPuntos(puntos.filter((p) => p.id !== id));
-        alert("Punto eliminado ✅");
-      } else alert(data.error || "Error al eliminar");
-    } catch {
-      alert("Error de conexión");
+      // ✅ NUEVO: Usar apiService en lugar de fetch directo
+      await apiService.deletePunto(id);
+      setPuntos(puntos.filter((p) => p.id !== id));
+      alert("Punto eliminado ✅");
+    } catch (error) {
+      alert(error.message || "Error al eliminar");
     }
   };
 
   // 🗑️ Eliminar comentario
   const eliminarComentario = async (id) => {
-    const token = localStorage.getItem("token");
     if (!window.confirm("¿Seguro que deseas eliminar este comentario?")) return;
     try {
-      const res = await fetch(`http://localhost:4000/comentarios/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setComentarios(comentarios.filter((c) => c.id !== id));
-        alert("Comentario eliminado ✅");
-      } else alert(data.error || "Error al eliminar");
-    } catch {
-      alert("Error de conexión");
+      // ✅ NUEVO: Usar apiService en lugar de fetch directo
+      await apiService.deleteComentario(id);
+      setComentarios(comentarios.filter((c) => c.id !== id));
+      alert("Comentario eliminado ✅");
+    } catch (error) {
+      alert(error.message || "Error al eliminar");
     }
   };
 
+  if (loading) return <p style={{ textAlign: "center" }}>Cargando perfil...</p>;
   if (error) return <p style={{ color: "red", textAlign: "center" }}>{error}</p>;
-  if (!usuario) return <p style={{ textAlign: "center" }}>Cargando perfil...</p>;
+  if (!usuario) return <p style={{ textAlign: "center" }}>No se pudo cargar el perfil</p>;
 
   return (
     <div

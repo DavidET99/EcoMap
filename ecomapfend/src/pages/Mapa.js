@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import Modal from "react-modal";
+import apiService from "../services/api";
 
 Modal.setAppElement("#root");
 
@@ -184,9 +185,8 @@ function Mapa() {
   useEffect(() => {
     const fetchPuntos = async () => {
       try {
-        const res = await fetch("http://localhost:4000/puntos");
-        if (!res.ok) throw new Error("Error fetching puntos");
-        const data = await res.json();
+        // ✅ NUEVO: Usar apiService en lugar de fetch directo
+        const data = await apiService.getPuntos();
         setPuntos(data);
         calcularPromedioGeneral(data);
       } catch (err) {
@@ -207,41 +207,28 @@ function Mapa() {
       const direccion = geoData.display_name || "Dirección desconocida";
 
       const punto = { ...newPoint, direccion };
-      const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:4000/puntos", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(punto),
-      });
-
-      if (res.ok) {
-        const refreshed = await fetch("http://localhost:4000/puntos");
-        const data = await refreshed.json();
-        setPuntos(data);
-        calcularPromedioGeneral(data);
-        setModalIsOpen(false);
-        setNewPoint(null);
-        showToast("Punto creado exitosamente", "success");
-      } else {
-        const errData = await res.json();
-        showToast(errData.error || "Error creando punto", "error");
-      }
+      // ✅ NUEVO: Usar apiService en lugar de fetch directo
+      await apiService.createPunto(punto);
+      
+      // Recargar puntos
+      const data = await apiService.getPuntos();
+      setPuntos(data);
+      calcularPromedioGeneral(data);
+      setModalIsOpen(false);
+      setNewPoint(null);
+      showToast("Punto creado exitosamente", "success");
     } catch (err) {
       console.error(err);
-      showToast("Error obteniendo dirección automática", "error");
+      showToast("Error creando punto", "error");
     }
   };
 
   // 🗨️ Obtener comentarios
   const fetchComentarios = async (puntoId) => {
     try {
-      const res = await fetch(`http://localhost:4000/comentarios/${puntoId}`);
-      if (!res.ok) throw new Error("Error fetching comentarios");
-      const data = await res.json();
+      // ✅ NUEVO: Usar apiService en lugar de fetch directo
+      const data = await apiService.getComentarios(puntoId);
       setComentarios(data);
     } catch (err) {
       console.error("Error obteniendo comentarios:", err);
@@ -260,32 +247,24 @@ function Mapa() {
     }
     
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:4000/comentarios", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          punto_id: selectedPunto.id,
-          comentario: nuevoComentario,
-          calificacion,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setNuevoComentario("");
-        setCalificacion(5);
-        await fetchComentarios(selectedPunto.id);
-        const refreshed = await fetch("http://localhost:4000/puntos");
-        const pdata = await refreshed.json();
-        setPuntos(pdata);
-        calcularPromedioGeneral(pdata);
-        showToast("Comentario enviado exitosamente", "success");
-      } else {
-        showToast(data.error || "Error al enviar comentario", "error");
-      }
+      const comentarioData = {
+        punto_id: selectedPunto.id,
+        comentario: nuevoComentario,
+        calificacion: calificacion
+      };
+
+      // ✅ NUEVO: Usar apiService en lugar de fetch directo
+      await apiService.createComentario(comentarioData);
+      
+      setNuevoComentario("");
+      setCalificacion(5);
+      await fetchComentarios(selectedPunto.id);
+      
+      // Recargar puntos para actualizar promedios
+      const data = await apiService.getPuntos();
+      setPuntos(data);
+      calcularPromedioGeneral(data);
+      showToast("Comentario enviado exitosamente", "success");
     } catch (err) {
       console.error(err);
       showToast("Error al enviar comentario", "error");

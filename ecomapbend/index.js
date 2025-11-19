@@ -4,25 +4,54 @@ const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const pool = require("./db"); // tu archivo db.js que exporta Pool
-const authenticateToken = require("./middleware/auth"); // middleware JWT
+const pool = require("./db");
+const authenticateToken = require("./middleware/auth");
 
 const app = express();
-app.use(cors());
+
+// CORS actualizado para producción
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://tu-app.netlify.app',
+    'https://*.netlify.app'
+  ],
+  credentials: true
+}));
+
 app.use(express.json());
 
 const PORT = process.env.PORT || 4000;
 
 /* ---------------------------
+   HEALTH CHECK PARA RENDER (NUEVO)
+--------------------------- */
+
+app.get("/health", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+    res.json({ 
+      status: 'OK', 
+      database: 'connected',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'ERROR', 
+      database: 'disconnected',
+      error: error.message 
+    });
+  }
+});
+
+/* ---------------------------
    RUTAS PÚBLICAS BÁSICAS
 --------------------------- */
 
-// Ruta raíz
 app.get("/", (req, res) => {
   res.send("API EcoMap funcionando 🚀");
 });
 
-// Comprobar conexión a BD
 app.get("/db-check", async (req, res) => {
   try {
     const result = await pool.query("SELECT NOW()");
@@ -37,7 +66,6 @@ app.get("/db-check", async (req, res) => {
    AUTH: REGISTER / LOGIN
 --------------------------- */
 
-// Registro
 app.post("/auth/register", async (req, res) => {
   try {
     const { nombre, email, password } = req.body;
@@ -63,7 +91,6 @@ app.post("/auth/register", async (req, res) => {
   }
 });
 
-// Login
 app.post("/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -100,7 +127,6 @@ app.post("/auth/login", async (req, res) => {
    RUTAS DE PUNTOS (CRUD)
 --------------------------- */
 
-// Obtener todos los puntos (con nombre del creador + estadísticas)
 app.get("/puntos", async (req, res) => {
   try {
     const q = `
@@ -125,7 +151,6 @@ app.get("/puntos", async (req, res) => {
   }
 });
 
-// Obtener un punto por id (con creador + stats)
 app.get("/puntos/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -153,7 +178,6 @@ app.get("/puntos/:id", async (req, res) => {
   }
 });
 
-// Crear punto
 app.post("/puntos", authenticateToken, async (req, res) => {
   try {
     const { nombre, tipo_residuo, direccion, lat, lon } = req.body;
@@ -186,7 +210,6 @@ app.post("/puntos", authenticateToken, async (req, res) => {
   }
 });
 
-// Eliminar punto (solo dueño)
 app.delete("/puntos/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -209,7 +232,6 @@ app.delete("/puntos/:id", authenticateToken, async (req, res) => {
    RUTAS DE COMENTARIOS
 --------------------------- */
 
-// Obtener comentarios de un punto
 app.get("/comentarios/:punto_id", async (req, res) => {
   try {
     const puntoId = parseInt(req.params.punto_id, 10);
@@ -229,7 +251,6 @@ app.get("/comentarios/:punto_id", async (req, res) => {
   }
 });
 
-// Crear comentario
 app.post("/comentarios", authenticateToken, async (req, res) => {
   try {
     const usuarioId = parseInt(req.user.id, 10);
@@ -281,7 +302,6 @@ app.post("/comentarios", authenticateToken, async (req, res) => {
   }
 });
 
-// Obtener todos los comentarios del usuario autenticado
 app.get("/mis-comentarios", authenticateToken, async (req, res) => {
   try {
     const userId = parseInt(req.user.id, 10);
@@ -301,7 +321,6 @@ app.get("/mis-comentarios", authenticateToken, async (req, res) => {
   }
 });
 
-// Eliminar comentario propio (protegida)
 app.delete("/comentarios/:id", authenticateToken, async (req, res) => {
   try {
     const usuarioId = parseInt(req.user.id, 10);
@@ -311,7 +330,6 @@ app.delete("/comentarios/:id", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "ID de comentario inválido" });
     }
 
-    // verificar si existe y pertenece al usuario
     const check = await pool.query(
       "SELECT usuario_id, punto_id FROM comentarios WHERE id = $1",
       [commentId]
@@ -328,10 +346,8 @@ app.delete("/comentarios/:id", authenticateToken, async (req, res) => {
         .json({ error: "No tienes permiso para eliminar este comentario" });
     }
 
-    // eliminar comentario
     await pool.query("DELETE FROM comentarios WHERE id = $1", [commentId]);
 
-    // recalcular promedios del punto
     const statsQ = `
       SELECT COALESCE(ROUND(AVG(calificacion)::numeric,2),0) AS avg_calificacion,
              COUNT(*) AS comentarios_count
@@ -355,7 +371,6 @@ app.delete("/comentarios/:id", authenticateToken, async (req, res) => {
    RUTAS DE USUARIOS
 --------------------------- */
 
-// Perfil propio
 app.get("/me", authenticateToken, async (req, res) => {
   try {
     const userId = parseInt(req.user.id, 10);
@@ -375,25 +390,11 @@ app.get("/me", authenticateToken, async (req, res) => {
   }
 });
 
-// Registrar el service worker (para modo PWA)
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/service-worker.js")
-      .then((registration) => {
-        console.log("Service Worker registrado con éxito:", registration);
-      })
-      .catch((error) => {
-        console.log("Error registrando Service Worker:", error);
-      });
-  });
-}
-
-
 /* ---------------------------
    INICIO SERVIDOR
 --------------------------- */
 
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+  console.log(`📍 Health check disponible en: http://localhost:${PORT}/health`);
 });
