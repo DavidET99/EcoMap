@@ -1,13 +1,15 @@
 class ApiService {
   getBaseUrl() {
     if (process.env.NODE_ENV === 'production') {
-      return process.env.REACT_APP_API_URL || 'https://ecomap-x5an.onrender.com';
+      return 'https://ecomap-x5an.onrender.com';
     }
-    return process.env.REACT_APP_API_URL || 'http://localhost:4000';
+    return 'http://localhost:4000';
   }
 
   async request(endpoint, options = {}) {
     const url = `${this.getBaseUrl()}${endpoint}`;
+    
+    console.log(`🔄 Haciendo request a: ${url}`); // Debug
     
     const config = {
       headers: {
@@ -23,6 +25,7 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
+      console.log(`✅ Response status: ${response.status}`); // Debug
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -40,13 +43,15 @@ class ApiService {
 
       return await response.json();
     } catch (error) {
-      console.error('API Request failed:', error);
-      throw error;
+      console.error('❌ API Request failed:', error);
+      console.error('URL attempted:', url);
+      throw new Error(`No se pudo conectar con el servidor: ${error.message}`);
     }
   }
 
   // ========== AUTH ==========
   async login(email, password) {
+    console.log('🔐 Intentando login...');
     return this.request('/auth/login', {
       method: 'POST',
       body: { email, password }
@@ -67,6 +72,9 @@ class ApiService {
 
   async createPunto(puntoData) {
     const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error("No hay token de autenticación");
+    }
     return this.request('/puntos', {
       method: 'POST',
       headers: {
@@ -94,13 +102,16 @@ class ApiService {
 
   async createComentario(comentarioData) {
     const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error("No hay token de autenticación");
+    }
     return this.request('/comentarios', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
-      body: comentarioData,
+      body: comentarioData
     });
   }
 
