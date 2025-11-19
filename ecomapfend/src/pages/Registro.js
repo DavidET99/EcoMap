@@ -189,7 +189,7 @@ function Registro() {
             cursor: 'pointer'
           }}
         >
-          Volver a Login
+          Volver a la página de inicio
         </button>
         {mensaje && (
           <p style={{

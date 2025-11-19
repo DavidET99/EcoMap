@@ -1,25 +1,41 @@
 class ApiService {
   getBaseUrl() {
     if (process.env.NODE_ENV === 'production') {
-      return process.env.REACT_APP_API_URL;
+      return process.env.REACT_APP_API_URL || 'https://ecomap-x5an.onrender.com';
     }
-    return 'http://localhost:4000';
+    return process.env.REACT_APP_API_URL || 'http://localhost:4000';
   }
 
   async request(endpoint, options = {}) {
     const url = `${this.getBaseUrl()}${endpoint}`;
     
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    if (config.body && typeof config.body === 'object') {
+      config.body = JSON.stringify(config.body);
+    }
+
     try {
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        ...options,
-      });
+      const response = await fetch(url, config);
 
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        let errorMessage = `Error ${response.status}: ${response.statusText}`;
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       return await response.json();
@@ -33,14 +49,14 @@ class ApiService {
   async login(email, password) {
     return this.request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password })
+      body: { email, password }
     });
   }
 
   async register(nombre, email, password) {
     return this.request('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ nombre, email, password })
+      body: { nombre, email, password }
     });
   }
 
@@ -56,7 +72,7 @@ class ApiService {
       headers: {
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(puntoData)
+      body: puntoData
     });
   }
 
@@ -82,7 +98,7 @@ class ApiService {
       headers: {
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(comentarioData)
+      body: comentarioData
     });
   }
 
@@ -115,7 +131,6 @@ class ApiService {
     });
   }
 }
-
 
 const apiServiceInstance = new ApiService();
 export default apiServiceInstance;

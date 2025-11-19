@@ -61,7 +61,7 @@ function Login() {
           padding: 'clamp(20px, 5vw, 40px) clamp(16px, 4vw, 32px)', 
           borderRadius: '12px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-          width: '100%',
+          width: '90%',
           maxWidth: 'min(400px, 90vw)', 
           zIndex: 1,
           position: 'relative',

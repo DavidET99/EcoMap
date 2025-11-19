@@ -103,7 +103,7 @@ function AddPoint({ onMapClick, isAuthenticated, onShowToast }) {
 }
 
 // Botón para volver a la ubicación del usuario
-function LocateButton({ userPosition }) {
+function LocateButton({ userPosition, isMobile }) {
   const map = useMap();
 
   const handleClick = (e) => {
@@ -120,7 +120,7 @@ function LocateButton({ userPosition }) {
       onClick={handleClick}
       style={{
         position: "absolute",
-        bottom: "60px", 
+        bottom: isMobile ? "15px" : "20px", 
         right: "20px",
         zIndex: 3000,
         backgroundColor: "white",
@@ -132,7 +132,6 @@ function LocateButton({ userPosition }) {
         boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
         fontSize: "20px",
         display: "flex",
-        flexShrink: 0,
         alignItems: "center",
         justifyContent: "center",
         minHeight: "44px",
@@ -292,7 +291,7 @@ function Mapa() {
       </head>
       
       <div className="map-container" style={{ 
-        height: isMobile ? "calc(100vh - 120px)" : "100vh", 
+        height: isMobile ? "calc(100vh - 60px)" : "100vh", 
         width: "100%", 
         position: "relative",
         overflow: "hidden"
@@ -419,8 +418,8 @@ function Mapa() {
               padding: "16px",
             },
             content: { 
-              maxWidth: "min(450px, 95vw)",
-              width: "100%",
+              maxWidth: "min(450px, 90vw)",
+              width: "90%",
               margin: "auto",
               borderRadius: "16px",
               padding: "0",

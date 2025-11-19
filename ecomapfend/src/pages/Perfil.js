@@ -2,6 +2,47 @@ import React, { useEffect, useState } from "react";
 import { FaTrash, FaUserCircle, FaMapMarkerAlt, FaCommentDots, FaRecycle } from "react-icons/fa";
 import apiService from "../services/api";
 
+//Toast
+function Toast({ message, type = "info", onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const backgroundColor = type === "error" ? "#e74c3c" : "#21429d";
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: "20px",
+        right: "20px",
+        backgroundColor: backgroundColor,
+        color: "white",
+        padding: "12px 20px",
+        borderRadius: "8px",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+        zIndex: 4000,
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        animation: "slideIn 0.3s ease-out",
+        maxWidth: "300px",
+      }}
+    >
+      <span style={{ fontSize: "1.2rem" }}>
+        {type === "error" ? "⚠️" : "💡"}
+      </span>
+      <span style={{ fontSize: "0.9rem", fontWeight: "500" }}>
+        {message}
+      </span>
+    </div>
+  );
+}
+
 function Perfil() {
   const [usuario, setUsuario] = useState(null);
   const [puntos, setPuntos] = useState([]);
@@ -9,6 +50,7 @@ function Perfil() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [toast, setToast] = useState(null);
 
   // Detectar cambios de tamaño de pantalla
   useEffect(() => {
@@ -19,6 +61,11 @@ function Perfil() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Función para mostrar toast
+  const showToast = (message, type = "info") => {
+    setToast({ message, type });
+  };
 
   // Cargar perfil y puntos
   useEffect(() => {
@@ -49,15 +96,15 @@ function Perfil() {
     fetchComentarios();
   }, []);
 
-  // Eliminar punto
+  // Eliminar punto 
   const eliminarPunto = async (id) => {
     if (!window.confirm("¿Seguro que deseas eliminar este punto?")) return;
     try {
       await apiService.deletePunto(id);
       setPuntos(puntos.filter((p) => p.id !== id));
-      alert("Punto eliminado ✅");
+      showToast("Punto eliminado exitosamente", "success");
     } catch (error) {
-      alert(error.message || "Error al eliminar");
+      showToast(error.message || "Error eliminando punto", "error");
     }
   };
 
@@ -67,9 +114,9 @@ function Perfil() {
     try {
       await apiService.deleteComentario(id);
       setComentarios(comentarios.filter((c) => c.id !== id));
-      alert("Comentario eliminado ✅");
+      showToast("Comentario eliminado exitosamente", "success");
     } catch (error) {
-      alert(error.message || "Error al eliminar");
+      showToast(error.message || "Error eliminando comentario", "error");
     }
   };
 
@@ -320,7 +367,32 @@ function Perfil() {
             </div>
           )}
         </section>
+
+        {/* Toast notifications*/}
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
       </div>
+
+      {/* Estilos para la animación del toast*/}
+      <style>
+        {`
+          @keyframes slideIn {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
     </>
   );
 }
