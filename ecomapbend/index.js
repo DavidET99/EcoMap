@@ -13,7 +13,7 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    'https://tu-app.netlify.app',
+    'https://https://ecomapmobile.netlify.app/',
     'https://*.netlify.app'
   ],
   credentials: true
