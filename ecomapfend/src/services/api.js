@@ -97,9 +97,10 @@ class ApiService {
     return this.request('/comentarios', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       },
-      body: comentarioData
+      body: comentarioData,
     });
   }
 

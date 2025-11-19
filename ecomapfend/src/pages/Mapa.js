@@ -262,7 +262,6 @@ function Mapa() {
   // Enviar comentario
   const handleComentarioSubmit = async () => {
     if (!selectedPunto) return;
-    
     if (!isAuthenticated) {
       showToast("Debes iniciar sesión para comentar", "error");
       return;
@@ -270,10 +269,12 @@ function Mapa() {
     
     try {
       const comentarioData = {
-        punto_id: selectedPunto.id,
-        comentario: nuevoComentario,
-        calificacion: calificacion
+        punto_id: Number(selectedPunto.id),        
+        comentario: nuevoComentario || "",         
+        calificacion: Number(calificacion)         
       };
+
+      console.log("Enviando comentario:", comentarioData);
 
       await apiService.createComentario(comentarioData);
       
@@ -287,8 +288,8 @@ function Mapa() {
       calcularPromedioGeneral(data);
       showToast("Comentario enviado exitosamente", "success");
     } catch (err) {
-      console.error(err);
-      showToast("Error al enviar comentario", "error");
+      console.error("Error al enviar comentario:", err);
+      showToast("Error al enviar comentario: " + err.message, "error");
     }
   };
 
