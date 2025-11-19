@@ -20,7 +20,14 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 }));
 
-app.options('*', cors());
+app.options('/puntos', cors());
+app.options('/puntos/:id', cors());
+app.options('/comentarios', cors());
+app.options('/comentarios/:id', cors());
+app.options('/auth/login', cors());
+app.options('/auth/register', cors());
+app.options('/me', cors());
+app.options('/mis-comentarios', cors());
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
