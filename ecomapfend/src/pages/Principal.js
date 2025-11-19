@@ -165,33 +165,33 @@ function Principal() {
 
           {/* botones horizontales */}
           <div style={{ 
-            marginTop: "auto", 
-            marginBottom: "20px", 
-            width: "100%", 
-            padding: "0 16px",
-            minHeight: isAuthenticated ? "60px" : "120px",
+            display: "flex", 
+            flexDirection: isMobile ? "row" : "column",
+            gap: "8px", 
+            alignItems: "center",
+            flexShrink: 0,
+            justifyContent: "center",
           }}>
             {isAuthenticated ? (
               <button
                 onClick={handleLogout}
                 style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  borderRadius: "8px",
-                  background: "#e74c3c",
-                  color: "#fff",
-                  fontWeight: 600,
-                  border: "none",
-                  fontSize: "clamp(0.9rem, 3vw, 1rem)",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px",
-                  bottom:"35px",
-                  minHeight: "44px",
-                  flexShrink: 0,
-
+                  flex: isMobile ? 1 : "auto",
+                    width: isMobile ? "auto" : "100%",
+                    padding: isMobile ? "10px 12px" : "12px 16px",
+                    borderRadius: "8px",
+                    background: "#f50202ff",
+                    color: "#fff",
+                    fontWeight: 600,
+                    border: "none",
+                    fontSize: isMobile ? "0.85rem" : "clamp(0.9rem, 3vw, 1rem)",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px",
+                    minHeight: "40px",
+                    whiteSpace: "nowrap",
                 }}
               >
                 <FaSignOutAlt /> Cerrar sesión
@@ -219,7 +219,7 @@ function Principal() {
                     border: "none",
                     fontSize: isMobile ? "0.85rem" : "clamp(0.9rem, 3vw, 1rem)",
                     cursor: "pointer",
-                     display: "flex",
+                    display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "6px",
