@@ -100,7 +100,7 @@ function Principal() {
             flexShrink: 0,
             flexDirection: "column",
             alignItems: "center",
-            padding: isMobile ? "80px 0 30px 0" : "40px 0",
+            padding: isMobile ? "60px 0 20px 0" : "40px 0",
             boxShadow: isMobile ? "none" : "2px 0 15px rgba(0,0,0,0.1)",
             transition: "all 0.3s ease",
             overflow: isMobile ? "auto" : "hidden",
@@ -135,7 +135,8 @@ function Principal() {
             listStyle: "none", 
             padding: 0, 
             width: "100%",
-            flex: 1
+            flexShrink: 0,
+            marginBottom: "20px",
           }}>
             <MenuItem
               icon={<FaHome />}
@@ -165,10 +166,11 @@ function Principal() {
           {/* botones horizontales */}
           <div style={{ 
             marginTop: "auto", 
-            marginBottom: "24px", 
+            marginBottom: "20px", 
             width: "100%", 
             padding: "0 16px",
             flexShrink: 0,
+            minHeight: isAuthenticated ? "60px" : "120px",
           }}>
             {isAuthenticated ? (
               <button
@@ -219,7 +221,6 @@ function Principal() {
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "6px",
-                    flexShrink: 0,
                     minHeight: "40px",
                     whiteSpace: "nowrap",
                   }}
@@ -243,7 +244,6 @@ function Principal() {
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "6px",
-                    flexShrink: 0,
                     minHeight: "40px",
                     whiteSpace: "nowrap",
                   }}
@@ -426,16 +426,16 @@ function MenuItem({ icon, text, active, onClick, isMobile }) {
         alignItems: "center",
         justifyContent: isMobile ? "center" : "flex-start",
         gap: "12px",
-        padding: isMobile ? "16px 32px" : "12px 32px",
-        margin: "6px 16px",
+        padding: "10px 20px",
+        margin: "2px 12px",
         borderRadius: "10px",
         cursor: "pointer",
         fontWeight: 600,
         background: active ? "#21429d" : "transparent",
         color: active ? "#fff" : "#21429d",
         transition: "all 0.2s ease",
-        fontSize: isMobile ? "1.1rem" : "1rem",
-        minHeight: "44px",
+        fontSize: isMobile ? "1.1rem" : "0.9rem",
+        minHeight: "40px",
       }}
       onMouseEnter={(e) => {
         if (!active) e.currentTarget.style.background = "rgba(33,66,157,0.15)";
