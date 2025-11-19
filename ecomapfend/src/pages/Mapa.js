@@ -120,7 +120,7 @@ function LocateButton({ userPosition, isMobile }) {
       onClick={handleClick}
       style={{
         position: "absolute",
-        bottom: isMobile ? "15px" : "20px", 
+        bottom: isMobile ? "25px" : "35px", 
         right: "20px",
         zIndex: 3000,
         backgroundColor: "white",

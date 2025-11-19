@@ -6,53 +6,44 @@ class ApiService {
     return process.env.REACT_APP_API_URL || 'http://localhost:4000';
   }
 
-async request(endpoint, options = {}) {
-  const url = `${this.getBaseUrl()}${endpoint}`;
-  
-  console.log('🔍 Making request to:', url, options); 
-  
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  };
-
-  if (config.body && typeof config.body === 'object') {
-    config.body = JSON.stringify(config.body);
-  }
-
-  try {
-    const response = await fetch(url, config);
+  async request(endpoint, options = {}) {
+    const url = `${this.getBaseUrl()}${endpoint}`;
     
-    console.log('🔍 Response status:', response.status); 
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    };
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.log('🔍 Error response:', errorText);
-      
-      let errorMessage = `Error ${response.status}: ${response.statusText}`;
-      
-      try {
-        const errorJson = JSON.parse(errorText);
-        errorMessage = errorJson.error || errorMessage;
-      } catch {
-        errorMessage = errorText || errorMessage;
-      }
-      
-      throw new Error(errorMessage);
+    if (config.body && typeof config.body === 'object') {
+      config.body = JSON.stringify(config.body);
     }
 
-    const result = await response.json();
-    console.log('🔍 Success response:', result);
-    return result;
-    
-  } catch (error) {
-    console.error('❌ API Request failed:', error);
-    throw error;
+    try {
+      const response = await fetch(url, config);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = `Error ${response.status}: ${response.statusText}`;
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('API Request failed:', error);
+      throw error;
+    }
   }
-}
 
   // ========== AUTH ==========
   async login(email, password) {

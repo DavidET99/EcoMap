@@ -9,13 +9,13 @@ const authenticateToken = require("./middleware/auth");
 
 const app = express();
 
-// CORS actualizado para producción
 app.use(cors({
-  origin: true,
+  origin: true, 
   credentials: true
-}));s
+}));
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 const PORT = process.env.PORT || 4000;
 
