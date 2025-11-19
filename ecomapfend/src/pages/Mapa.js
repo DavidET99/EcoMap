@@ -120,7 +120,7 @@ function LocateButton({ userPosition }) {
       onClick={handleClick}
       style={{
         position: "absolute",
-        bottom: "20px", 
+        bottom: "60px", 
         right: "20px",
         zIndex: 3000,
         backgroundColor: "white",
@@ -132,6 +132,7 @@ function LocateButton({ userPosition }) {
         boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
         fontSize: "20px",
         display: "flex",
+        flexShrink: 0,
         alignItems: "center",
         justifyContent: "center",
         minHeight: "44px",
@@ -291,7 +292,7 @@ function Mapa() {
       </head>
       
       <div className="map-container" style={{ 
-        height: isMobile ? "calc(100vh - 60px)" : "100vh", 
+        height: isMobile ? "calc(100vh - 120px)" : "100vh", 
         width: "100%", 
         position: "relative",
         overflow: "hidden"

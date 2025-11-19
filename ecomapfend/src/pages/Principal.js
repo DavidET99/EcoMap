@@ -73,6 +73,7 @@ function Principal() {
               zIndex: 1000,
               background: "#21429d",
               color: "white",
+              flexShrink: 0,
               border: "none",
               borderRadius: "8px",
               padding: "12px",
@@ -96,6 +97,7 @@ function Principal() {
             background: "rgba(255, 255, 255, 0.98)",
             backdropFilter: "blur(10px)",
             display: "flex",
+            flexShrink: 0,
             flexDirection: "column",
             alignItems: "center",
             padding: isMobile ? "80px 0 30px 0" : "40px 0",
@@ -197,6 +199,7 @@ function Principal() {
                 flexDirection: isMobile ? "row" : "column",
                 gap: "8px", 
                 alignItems: "center",
+                flexShrink: 0,
                 justifyContent: "center",
               }}>
                 <button
@@ -212,10 +215,11 @@ function Principal() {
                     border: "none",
                     fontSize: isMobile ? "0.85rem" : "clamp(0.9rem, 3vw, 1rem)",
                     cursor: "pointer",
-                    display: "flex",
+                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "6px",
+                    flexShrink: 0,
                     minHeight: "40px",
                     whiteSpace: "nowrap",
                   }}
@@ -239,6 +243,7 @@ function Principal() {
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "6px",
+                    flexShrink: 0,
                     minHeight: "40px",
                     whiteSpace: "nowrap",
                   }}
