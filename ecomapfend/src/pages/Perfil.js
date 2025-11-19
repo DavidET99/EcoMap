@@ -193,6 +193,14 @@ function Perfil() {
               <b>Email:</b> {usuario.email}
             </p>
             <p style={{ 
+              margin: "6px 0",
+              fontSize: "clamp(0.9rem, 2.5vw, 1rem)",
+              color: "#27ae60",
+              fontWeight: "bold"
+            }}>
+              🏆 <b>Puntos acumulados:</b> {usuario.puntos_acumulados || 0}
+            </p>
+            <p style={{ 
               margin: 0,
               fontSize: "clamp(0.9rem, 2.5vw, 1rem)"
             }}>

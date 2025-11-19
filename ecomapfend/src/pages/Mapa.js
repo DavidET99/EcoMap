@@ -241,7 +241,7 @@ function Mapa() {
     calcularPromedioGeneral(data);
     setModalIsOpen(false);
     setNewPoint(null);
-    showToast("Punto creado exitosamente", "success");
+    showToast("✔ Punto creado exitosamente +10 puntos!", "success");
   } catch (err) {
     console.error("Error detallado creando punto:", err);
     showToast("Error creando punto: " + err.message, "error");
@@ -286,7 +286,7 @@ function Mapa() {
       const data = await apiService.getPuntos();
       setPuntos(data);
       calcularPromedioGeneral(data);
-      showToast("Comentario enviado exitosamente", "success");
+      showToast("✔ Comentario enviado exitosamente +5 puntos!", "success");
     } catch (err) {
       console.error("Error al enviar comentario:", err);
       showToast("Error al enviar comentario: " + err.message, "error");

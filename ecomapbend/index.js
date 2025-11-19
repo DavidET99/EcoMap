@@ -191,11 +191,25 @@ app.post("/puntos", authenticateToken, async (req, res) => {
     if (!nombre || !tipo_residuo)
       return res.status(400).json({ error: "Nombre y tipo de residuo son obligatorios" });
 
+    const puntosHoy = await pool.query(
+      "SELECT COUNT(*) as total FROM puntos_reciclaje WHERE usuario_id = $1 AND DATE(creado_en) = CURRENT_DATE",
+      [req.user.id]
+    );
+    
+    if (parseInt(puntosHoy.rows[0].total) >= 1) {
+      return res.status(400).json({ error: "Solo puedes crear 1 punto por día" });
+    }
+
     const insert = await pool.query(
       `INSERT INTO puntos_reciclaje (usuario_id, nombre, tipo_residuo, direccion, lat, lon)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id`,
       [req.user.id, nombre, tipo_residuo, direccion, lat, lon]
+    );
+
+    await pool.query(
+      "UPDATE usuarios SET puntos_acumulados = puntos_acumulados + 10 WHERE id = $1",
+      [req.user.id]
     );
 
     const nuevoId = insert.rows[0].id;
@@ -270,6 +284,15 @@ app.post("/comentarios", authenticateToken, async (req, res) => {
     if (calificacion < 1 || calificacion > 5)
       return res.status(400).json({ error: "calificación debe estar entre 1 y 5" });
 
+    const comentarioExistente = await pool.query(
+      "SELECT id FROM comentarios WHERE usuario_id = $1 AND punto_id = $2",
+      [usuarioId, puntoId]
+    );
+    
+    if (comentarioExistente.rows.length > 0) {
+      return res.status(400).json({ error: "Ya comentaste este punto anteriormente" });
+    }
+
     const check = await pool.query("SELECT id FROM puntos_reciclaje WHERE id = $1", [puntoId]);
     if (check.rows.length === 0)
       return res.status(404).json({ error: "Punto no encontrado" });
@@ -280,6 +303,11 @@ app.post("/comentarios", authenticateToken, async (req, res) => {
     `;
     const insertRes = await pool.query(insertQ, [usuarioId, puntoId, comentario || null, calificacion]);
     const newCommentId = insertRes.rows[0].id;
+
+    await pool.query(
+      "UPDATE usuarios SET puntos_acumulados = puntos_acumulados + 5 WHERE id = $1",
+      [usuarioId]
+    );
 
     const commentQ = `
       SELECT c.id, c.comentario, c.calificacion, c.creado_en,
@@ -381,7 +409,10 @@ app.delete("/comentarios/:id", authenticateToken, async (req, res) => {
 app.get("/me", authenticateToken, async (req, res) => {
   try {
     const userId = parseInt(req.user.id, 10);
-    const userRes = await pool.query("SELECT id, nombre, email, creado_en FROM usuarios WHERE id = $1", [userId]);
+    const userRes = await pool.query(
+      "SELECT id, nombre, email, creado_en, puntos_acumulados FROM usuarios WHERE id = $1", 
+      [userId]
+    );
     if (userRes.rows.length === 0)
       return res.status(404).json({ error: "Usuario no encontrado" });
 
