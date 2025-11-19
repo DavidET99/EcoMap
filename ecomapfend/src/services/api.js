@@ -70,7 +70,8 @@ class ApiService {
     return this.request('/puntos', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       },
       body: puntoData
     });

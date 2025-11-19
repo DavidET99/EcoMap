@@ -214,30 +214,39 @@ function Mapa() {
 
   // Guardar punto con geocodificación inversa
   const handleSavePoint = async () => {
-    try {
-      if (!newPoint) return;
-      const resGeo = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${newPoint.lat}&lon=${newPoint.lon}`
-      );
-      const geoData = await resGeo.json();
-      const direccion = geoData.display_name || "Dirección desconocida";
+  try {
+    if (!newPoint) return;
+    
+    const resGeo = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${newPoint.lat}&lon=${newPoint.lon}`
+    );
+    const geoData = await resGeo.json();
+    const direccion = geoData.display_name || "Dirección desconocida";
 
-      const punto = { ...newPoint, direccion };
+    const puntoData = {
+      nombre: newPoint.nombre || "",
+      tipo_residuo: newPoint.tipo_residuo || "",
+      direccion: direccion,
+      lat: newPoint.lat,
+      lon: newPoint.lon
+    };
 
-      await apiService.createPunto(punto);
-      
-      // Recargar puntos
-      const data = await apiService.getPuntos();
-      setPuntos(data);
-      calcularPromedioGeneral(data);
-      setModalIsOpen(false);
-      setNewPoint(null);
-      showToast("Punto creado exitosamente", "success");
-    } catch (err) {
-      console.error(err);
-      showToast("Error creando punto", "error");
-    }
-  };
+    console.log("Enviando datos:", puntoData); 
+
+    await apiService.createPunto(puntoData);
+    
+    // Recargar puntos
+    const data = await apiService.getPuntos();
+    setPuntos(data);
+    calcularPromedioGeneral(data);
+    setModalIsOpen(false);
+    setNewPoint(null);
+    showToast("Punto creado exitosamente", "success");
+  } catch (err) {
+    console.error("Error detallado creando punto:", err);
+    showToast("Error creando punto: " + err.message, "error");
+  }
+};
 
   // Obtener comentarios
   const fetchComentarios = async (puntoId) => {

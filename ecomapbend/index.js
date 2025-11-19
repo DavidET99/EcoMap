@@ -10,9 +10,17 @@ const authenticateToken = require("./middleware/auth");
 const app = express();
 
 app.use(cors({
-  origin: true, 
-  credentials: true
+  origin: [
+    'http://localhost:3000',
+    'https://https://ecomapmobile.netlify.app/',
+    'https://*.netlify.app'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 }));
+
+app.options('*', cors());
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
