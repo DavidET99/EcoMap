@@ -197,7 +197,7 @@ function Principal() {
                 <FaSignOutAlt /> Cerrar sesión
               </button>
             ) : (
-              // BOTONES (Login + Registro) Versión compacta
+              // BOTONES (Login + Registro) 
               <div style={{ 
                 display: "flex", 
                 flexDirection: isMobile ? "row" : "column",
@@ -257,7 +257,7 @@ function Principal() {
           </div>
         </nav>
 
-        {/* Overlay para móviles cuando sidebar está abierto */}
+        {/* Overlay para móviles */}
         {isMobile && sidebarOpen && (
           <div
             style={{
@@ -273,7 +273,7 @@ function Principal() {
           />
         )}
 
-        {/* Contenido principal */}
+        {/* principal */}
         <main
           style={{
             flex: 1,
@@ -320,6 +320,11 @@ function Principal() {
                 en tu comunidad. 🌍♻️
               </p>
               
+              {/* CARRUSEL */}
+              <div style={{ margin: "30px 0" }}>
+                <CarruselBienvenida />
+              </div>
+
               {!isAuthenticated && (
                 <div style={{ 
                   background: "#fffae6", 
@@ -448,6 +453,212 @@ function MenuItem({ icon, text, active, onClick, isMobile }) {
     >
       <span style={{ fontSize: isMobile ? "1.3rem" : "1.2rem" }}>{icon}</span> {text}
     </li>
+  );
+}
+
+// Componente Carrusel
+function CarruselBienvenida() {
+  const [slideActual, setSlideActual] = useState(0);
+  const isMobile = window.innerWidth < 768;
+
+  const slides = [
+    {
+      imagen: require("../assets/reciclaje1.webp"),
+      titulo: "¿Quiénes Somos?",
+      texto: "EcoMap es una comunidad que conecta a recicladores con puntos de reciclaje. Juntos hacemos de Chile un país más sostenible",
+      accion: "¡Únete a la comunidad!"
+    },
+    {
+      imagen: require("../assets/reciclaje2.png"),
+      titulo: "Sistema de Puntos EcoMap",
+      texto: "Gana puntos creando puntos de reciclaje (+10) y comentando (+5). Próximamente podrás canjearlos por beneficios con empresas aliadas",
+      accion: "¡Comienza a acumular puntos!"
+    },
+    {
+      imagen: require("../assets/reciclaje3.webp"),
+      titulo: "Beneficios del Reciclaje",
+      texto: "Cada punto creado ayuda a reducir la contaminación, ahorrar energía y crear conciencia ecológica en tu comunidad",
+      accion: "¡Haz la diferencia!"
+    }
+  ];
+
+  useEffect(() => {
+    const intervalo = setInterval(() => {
+      setSlideActual((prev) => (prev + 1) % slides.length);
+    }, 5000); 
+
+    return () => clearInterval(intervalo);
+  }, [slides.length]);
+
+  const siguienteSlide = () => {
+    setSlideActual((prev) => (prev + 1) % slides.length);
+  };
+
+  const anteriorSlide = () => {
+    setSlideActual((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
+  const irASlide = (index) => {
+    setSlideActual(index);
+  };
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: isMobile ? "300px" : "400px",
+        borderRadius: "12px",
+        overflow: "hidden",
+        boxShadow: "0 4px 15px rgba(0,0,0,0.15)",
+      }}
+    >
+      {/* Slides */}
+      {slides.map((slide, index) => (
+        <div
+          key={index}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            opacity: index === slideActual ? 1 : 0,
+            transform: `translateX(${(index - slideActual) * 100}%)`,
+            transition: "all 0.6s ease",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <img
+            src={slide.imagen}
+            alt={slide.titulo}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
+          
+          {/* Overlay de texto */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              background: "linear-gradient(transparent, rgba(0,0,0,0.8))",
+              color: "white",
+              padding: "clamp(16px, 3vw, 24px)",
+              textAlign: "center",
+            }}
+          >
+            <h3 style={{ 
+              margin: "0 0 8px 0",
+              fontSize: isMobile ? "1.2rem" : "1.5rem",
+              fontWeight: "700",
+              textShadow: "2px 2px 4px rgba(0,0,0,0.5)"
+            }}>
+              {slide.titulo}
+            </h3>
+            <p style={{ 
+              margin: "0 0 12px 0",
+              fontSize: isMobile ? "0.9rem" : "1rem",
+              lineHeight: "1.4",
+              textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
+              maxWidth: "500px",
+              marginLeft: "auto",
+              marginRight: "auto"
+            }}>
+              {slide.texto}
+            </p>
+            <div style={{ 
+              color: "#4ecdc4",
+              fontWeight: "600",
+              fontSize: isMobile ? "0.9rem" : "1rem"
+            }}>
+              {slide.accion}
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {/* Botones de navegación */}
+      <button
+        onClick={anteriorSlide}
+        style={{
+          position: "absolute",
+          left: "10px",
+          top: "50%",
+          transform: "translateY(-50%)",
+          background: "rgba(255,255,255,0.8)",
+          border: "none",
+          borderRadius: "50%",
+          width: "40px",
+          height: "40px",
+          cursor: "pointer",
+          fontSize: "18px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "40px",
+        }}
+      >
+        ‹
+      </button>
+
+      <button
+        onClick={siguienteSlide}
+        style={{
+          position: "absolute",
+          right: "10px",
+          top: "50%",
+          transform: "translateY(-50%)",
+          background: "rgba(255,255,255,0.8)",
+          border: "none",
+          borderRadius: "50%",
+          width: "40px",
+          height: "40px",
+          cursor: "pointer",
+          fontSize: "18px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "40px",
+        }}
+      >
+        ›
+      </button>
+
+      {/* Indicadores */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "12px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          display: "flex",
+          gap: "8px",
+        }}
+      >
+        {slides.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => irASlide(index)}
+            style={{
+              width: "10px",
+              height: "10px",
+              borderRadius: "50%",
+              border: "none",
+              background: index === slideActual ? "#4ecdc4" : "rgba(255,255,255,0.5)",
+              cursor: "pointer",
+              transition: "background 0.3s ease",
+            }}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
