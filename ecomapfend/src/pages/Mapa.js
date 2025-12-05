@@ -736,7 +736,7 @@ function Mapa() {
                     💡 Debes iniciar sesión para comentar y calificar
                   </p>
                   <button 
-                    onClick={() => window.location.href = "/login"}
+                    onClick={() => showToast("Debes iniciar sesión para comentar. Ve a la página de login.", "error")}
                     style={{
                       padding: "12px 24px",
                       backgroundColor: "#2a78c8",
