@@ -307,54 +307,36 @@ function Mapa() {
         position: "relative",
         overflow: "hidden"
       }}>
-        {/* Indicador superior*/}
-        <div
-          style={{
-            position: "absolute",
-            top: isMobile ? "70px" : "10px", 
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 3000,
-            backgroundColor: "white",
-            padding: "clamp(8px, 2vw, 12px) clamp(12px, 3vw, 18px)",
-            borderRadius: "10px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
-            textAlign: "center",
-            width: isMobile ? "95%" : "90%",
-            maxWidth: "400px",
-            fontSize: "clamp(0.8rem, 3vw, 0.9rem)",
-          }}
-        >
-          {!isAnyModalOpen && (
-            <div
-              style={{
-                position: "absolute",
-                top: isMobile ? "70px" : "10px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                zIndex: 3000,
-                backgroundColor: "white",
-                padding: "clamp(8px, 2vw, 12px) clamp(12px, 3vw, 18px)",
-                borderRadius: "10px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
-                textAlign: "center",
-                width: isMobile ? "95%" : "90%",
-                maxWidth: "400px",
-                fontSize: "clamp(0.8rem, 3vw, 0.9rem)",
-              }}
-            >
-              <div>
-                <b>{puntos.length}</b> puntos activos · Promedio:{" "}
-                <StarRating value={promedioGeneral} /> <small>({promedioGeneral})</small>
-                {!isAuthenticated && (
-                  <div style={{ fontSize: "clamp(0.7rem, 2.5vw, 0.8rem)", color: "#e74c3c", marginTop: "4px" }}>
-                    ⓘ Inicia sesión para crear puntos y comentar
-                  </div>
-                )}
-              </div>
+        {/* Indicador superior */}
+        {!isAnyModalOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: isMobile ? "70px" : "10px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 3000,
+              backgroundColor: "white",
+              padding: "clamp(8px, 2vw, 12px) clamp(12px, 3vw, 18px)",
+              borderRadius: "10px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+              textAlign: "center",
+              width: isMobile ? "95%" : "90%",
+              maxWidth: "400px",
+              fontSize: "clamp(0.8rem, 3vw, 0.9rem)",
+            }}
+          >
+            <div>
+              <b>{puntos.length}</b> puntos activos · Promedio:{" "}
+              <StarRating value={promedioGeneral} /> <small>({promedioGeneral})</small>
+              {!isAuthenticated && (
+                <div style={{ fontSize: "clamp(0.7rem, 2.5vw, 0.8rem)", color: "#e74c3c", marginTop: "4px" }}>
+                  ⓘ Inicia sesión para crear puntos y comentar
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/*  Mapa principal */}
         <MapContainer
